@@ -33,7 +33,9 @@ Cada integrante instala QGIS MCP localmente. El perfil de QGIS, la conexión y l
 - `uv` instalado, con `uvx` disponible en `PATH`. Consultá la [instalación oficial de uv](https://docs.astral.sh/uv/getting-started/installation/). `uvx` prepara y ejecuta el servidor sin instalar Python manualmente para este proyecto.
 - Un cliente que admita el protocolo MCP y permita registrar servidores MCP por comando.
 
-### 2. Instalar el complemento en QGIS
+### 2. Instalar el complemento en QGIS (si todavía no está instalado)
+
+Estos pasos son para una instalación nueva. Si el complemento QGIS MCP ya está habilitado en tu QGIS, salteá esta sección. Los pasos describen la instalación estándar desde el administrador de complementos; no afirman que ese haya sido el método usado en esta computadora.
 
 1. Abrí QGIS.
 2. Entrá a **Complementos > Administrar e instalar complementos**.
