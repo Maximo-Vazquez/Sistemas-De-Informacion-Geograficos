@@ -1,0 +1,3 @@
+interface:
+  display_name: "QGIS MCP"
+  short_description: "Operate an open QGIS project through its MCP tools"
