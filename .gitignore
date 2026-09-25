@@ -1,0 +1,6 @@
+# Insumos locales de Chaco (fuentes originales y archivo comprimido)
+/qgis/Chaco/datos/fuente/
+/qgis/Chaco/insumos/
+
+# Copia temporal en la raíz de qgis mientras QGIS mantiene abierto el original
+/qgis/datos/
