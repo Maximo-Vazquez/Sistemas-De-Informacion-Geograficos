@@ -1,103 +1,101 @@
 # Automatización de QGIS: MCP y skill del equipo
 
-Esta guía describe cómo conectar Codex con la instancia local de QGIS y cómo usar las instrucciones compartidas del repositorio.
+Esta guía explica cómo conectar un cliente compatible con MCP a una sesión local de QGIS y cómo aprovechar las instrucciones de trabajo guardadas en este repositorio.
 
-## Qué hace cada componente
+## Componentes
 
-- El plugin QGIS MCP corre dentro de QGIS y expone su API PyQGIS mediante un servidor TCP local.
-- El proceso qgis-mcp-server corre como servidor MCP iniciado por Codex y traduce las llamadas de herramientas hacia el plugin.
-- La skill qgis-mcp-workflows indica al agente cómo inspeccionar y modificar proyectos con cuidado. No instala QGIS, no inicia el plugin y no agrega herramientas por sí misma.
+- El complemento QGIS MCP se ejecuta dentro de QGIS y expone operaciones de PyQGIS mediante un servidor TCP local.
+- El proceso `qgis-mcp-server` se ejecuta como servidor MCP. El cliente MCP lo inicia y el servidor se comunica con el complemento.
+- La skill `qgis-mcp-workflows` documenta el procedimiento del equipo para revisar y modificar proyectos, capas, sistemas de referencia, guardado y resultados. Es una guía de trabajo; por sí sola no instala QGIS ni habilita la conexión.
+- Para procesamientos por lotes o tareas que no requieren una sesión gráfica abierta, también se puede usar PyQGIS directamente.
 
-El agente opera la sesión de QGIS que tenga el plugin conectado. Para procesamiento por lotes o cuando no se necesite una ventana abierta, puede usarse PyQGIS directamente.
+La versión 0.14.1 del servidor declara 118 herramientas para consultar proyectos y capas, administrar entidades, ejecutar geoprocesos, aplicar estilos y crear diseños o exportaciones. El [README de la etiqueta v0.14.1](https://github.com/nkarasiak/qgis-mcp/blob/v0.14.1/README.md) detalla sus capacidades.
 
-En v0.14.1 el servidor ofrece 118 herramientas para consultar proyectos y capas, gestionar entidades, ejecutar procesos de geoprocesamiento, aplicar estilos y crear diseños o exportaciones. El [README de la etiqueta v0.14.1](https://github.com/nkarasiak/qgis-mcp/blob/v0.14.1/README.md) enumera las capacidades.
+## Procedencia y versiones
 
-## Procedencia y versiones del proyecto
+El complemento y el servidor provienen del proyecto de código abierto [nkarasiak/qgis-mcp](https://github.com/nkarasiak/qgis-mcp). La configuración de este equipo fija la etiqueta v0.14.1:
 
-El plugin y el servidor vienen del proyecto de código abierto [nkarasiak/qgis-mcp](https://github.com/nkarasiak/qgis-mcp). La instalación actual está fijada a la etiqueta v0.14.1:
+- Complemento QGIS: versión 0.14.1; origen declarado en sus metadatos: `https://github.com/nkarasiak/qgis-mcp`.
+- Servidor MCP: se ejecuta desde el ZIP de la misma etiqueta mediante `uvx`.
+- Compatibilidad declarada por el complemento: QGIS 3.28 o posterior y QGIS 4.
+- Configuración de referencia verificada en este equipo: QGIS 4.2.2, perfil `QGIS4/default`, complemento 0.14.1.
+- El complemento y el servidor deben conservar versiones compatibles. Actualizar uno sin el otro puede causar incompatibilidades.
 
-- Plugin QGIS: versión 0.14.1; origen declarado por sus metadatos: https://github.com/nkarasiak/qgis-mcp.
-- Servidor MCP: se ejecuta desde el ZIP de la misma etiqueta v0.14.1 en GitHub mediante uvx.
-- Compatibilidad declarada por el plugin: QGIS 3.28 o posterior y QGIS 4.
-- En la configuración de referencia: QGIS 4.2.2 y perfil QGIS4 default.
-- En este equipo el plugin 0.14.1 está instalado y habilitado en el perfil QGIS4/default; el ajuste autostart está activado. Cada integrante instala el plugin en su propio perfil. Verificá siempre la conexión con ping, porque el ajuste de inicio automático no confirma por sí solo que el servidor esté escuchando.
-- El plugin y el servidor deben conservar versiones compatibles. Actualizar uno sin el otro puede dejar herramientas incompatibles.
+La instalación y configuración oficial están en el [README de v0.14.1](https://github.com/nkarasiak/qgis-mcp/blob/v0.14.1/README.md), que también documenta la integración con clientes MCP.
 
-La documentación de instalación y configuración del proyecto original está en el [README de v0.14.1](https://github.com/nkarasiak/qgis-mcp/blob/v0.14.1/README.md) y la [guía de integración con agentes](https://github.com/nkarasiak/qgis-mcp/blob/v0.14.1/docs/agent-integration.md).
+## Instalación en cada computadora
 
-## Instalación para cada integrante
-
-Cada persona instala QGIS MCP en su propia computadora y configura su propio Codex. No se comparten el perfil de QGIS ni la configuración de usuario de Codex.
+Cada integrante instala QGIS MCP localmente. El perfil de QGIS, la conexión y la configuración del cliente MCP son propios de cada computadora.
 
 ### 1. Requisitos
 
 - QGIS 3.28 o posterior.
-- uv instalado, con uvx disponible en PATH. Seguí la [instalación oficial de uv](https://docs.astral.sh/uv/getting-started/installation/). uvx prepara y ejecuta el servidor sin una instalación manual de Python.
-- Codex CLI o la aplicación Codex con acceso a la configuración MCP.
+- `uv` instalado, con `uvx` disponible en `PATH`. Consultá la [instalación oficial de uv](https://docs.astral.sh/uv/getting-started/installation/). `uvx` prepara y ejecuta el servidor sin instalar Python manualmente para este proyecto.
+- Un cliente que admita el protocolo MCP y permita registrar servidores MCP por comando.
 
-### 2. Instalar el plugin en QGIS
+### 2. Instalar el complemento en QGIS
 
 1. Abrí QGIS.
-2. Entrá a Complementos > Administrar e instalar complementos.
-3. Buscá QGIS MCP e instalalo.
-4. Reiniciá QGIS y comprobá que QGIS MCP esté habilitado.
-5. Abrí el panel acoplable QGIS MCP y elegí Start Server. En el administrador de complementos, confirmá que la versión del plugin coincida con v0.14.1; si instalás otra versión, actualizá coordinadamente el servidor MCP.
+2. Entrá a **Complementos > Administrar e instalar complementos**.
+3. Buscá **QGIS MCP** e instalalo.
+4. Reiniciá QGIS y confirmá que el complemento esté habilitado.
+5. Abrí el panel QGIS MCP y seleccioná **Start Server**.
+6. En el administrador de complementos, comprobá que la versión sea 0.14.1, para que coincida con el servidor de esta guía.
 
-El servidor del plugin escucha en localhost:9876 de forma predeterminada. El perfil QGIS y el plugin son locales a cada instalación.
+De forma predeterminada, el complemento escucha en `localhost:9876`.
 
-### 3. Registrar el servidor MCP en Codex
+### 3. Registrar el servidor en el cliente MCP
 
-Cloná primero el repositorio del equipo siguiendo su README. En una terminal donde Codex CLI esté disponible, ejecutá:
+Cloná el repositorio del equipo siguiendo el README. Después, agregá un servidor MCP con estos datos en la configuración que use tu cliente:
 
-    codex mcp add qgis -- uvx --from https://github.com/nkarasiak/qgis-mcp/archive/refs/tags/v0.14.1.zip qgis-mcp-server
+- Nombre: `qgis`
+- Comando: `uvx`
+- Argumentos:
 
-Esto añade QGIS MCP a la configuración de usuario de Codex. La misma configuración se usa desde CLI y la aplicación Codex. Para editarla manualmente, agregá este bloque a %USERPROFILE%/.codex/config.toml:
+      --from
+      https://github.com/nkarasiak/qgis-mcp/archive/refs/tags/v0.14.1.zip
+      qgis-mcp-server
+
+Como referencia, esta es la misma configuración expresada en TOML:
 
     [mcp_servers.qgis]
     command = "uvx"
     args = ["--from", "https://github.com/nkarasiak/qgis-mcp/archive/refs/tags/v0.14.1.zip", "qgis-mcp-server"]
     startup_timeout_sec = 120
 
-Comprobá que uvx esté instalado con uvx --version. Si Codex no lo encuentra, ejecutá Get-Command uvx en PowerShell y reemplazá command por la ruta completa al ejecutable de esa computadora. No copies al repositorio el config.toml global: puede contener rutas, servidores y preferencias propios de cada integrante.
+Los nombres de sección, el formato y la ubicación del archivo dependen del cliente MCP; usá la estructura equivalente que indique su documentación. Comprobá `uvx --version`. Si el cliente no encuentra `uvx`, en PowerShell ejecutá `Get-Command uvx` y configurá la ruta completa a ese ejecutable. No guardes en este repositorio configuraciones personales: pueden contener rutas, otros servidores y preferencias de cada integrante.
 
-Después de registrar el servidor, reiniciá Codex para que cargue la configuración nueva.
+Después de registrar o cambiar un servidor, reiniciá o recargá el cliente para que tome la configuración nueva.
 
 ### 4. Verificar la conexión
 
-1. En Codex ejecutá codex mcp list y confirmá que aparezca qgis.
-2. Con QGIS abierto y el plugin en Start Server, pedile al agente que llame a ping. La respuesta esperada es pong=true.
-3. Ejecutá diagnose y comprobá que el servidor y el plugin sean compatibles.
-4. Si no conecta, verificá que QGIS siga abierto, que el plugin esté habilitado y que el puerto local 9876 esté libre y escuchando.
+1. Confirmá en el cliente MCP que el servidor `qgis` esté habilitado y conectado.
+2. Con QGIS abierto y **Start Server** activo, invocá la herramienta `ping`. La respuesta esperada es `pong=true`.
+3. Ejecutá `diagnose` y revisá que el servidor y el complemento sean compatibles.
+4. Si no conecta, comprobá que QGIS siga abierto, que el complemento esté habilitado y que el puerto local 9876 esté disponible.
 
 ## Skill compartida del repositorio
 
-La skill está en .agents/skills/qgis-mcp-workflows/:
+La skill del equipo está en `.agents/skills/qgis-mcp-workflows/`. Su archivo `SKILL.md` describe cómo inspeccionar proyectos y capas, revisar los sistemas de referencia, hacer cambios, guardar y verificar los resultados. La skill es propia de este repositorio; no se descarga del proyecto externo `qgis-mcp`.
 
-- SKILL.md: cuándo y cómo inspeccionar proyectos, capas, CRS, cambios, guardado y verificación.
-- agents/openai.yaml: nombre corto y descripción para la interfaz de Codex.
+Al clonar el repositorio, las instrucciones quedan disponibles en esa carpeta. Si el cliente de trabajo reconoce skills versionadas en `.agents/skills/`, podrá cargarlas desde la raíz del repositorio. De lo contrario, seguí la documentación de ese cliente para vincular la carpeta a su directorio de skills. Podés indicar el nombre `qgis-mcp-workflows` al iniciar una tarea para que se apliquen esas pautas.
 
-Esta skill fue creada para este equipo y vive en este repositorio; no se copió ni se descarga desde el proyecto externo qgis-mcp. Se apoya en el protocolo de trabajo de QGIS MCP y puede versionarse junto con el código.
+La skill documenta el procedimiento de trabajo; el servidor MCP aporta la conexión y las herramientas para interactuar con QGIS. Si el servidor MCP no está conectado, PyQGIS puede servir como alternativa para automatizar operaciones.
 
-Para instalarla, cloná el repositorio GIS y abrí la carpeta raíz GIS como proyecto en Codex. Codex descubre las skills versionadas en .agents/skills del repositorio; no hace falta copiarlas al perfil personal. Si el equipo trabaja desde un directorio sin el repositorio, la carpeta también puede copiarse a %USERPROFILE%/.agents/skills/qgis-mcp-workflows. En otros agentes, instalala o vinculala en la ubicación de skills que ese agente admita. En una tarea QGIS podés pedir explícitamente la skill qgis-mcp-workflows; la descripción de la skill también permite que Codex la seleccione cuando corresponda. La guía de [skills de Codex](https://developers.openai.com/codex/skills) describe la búsqueda de skills del repositorio y del usuario.
+## Seguridad y límites
 
-La skill enseña el flujo; el MCP proporciona la conexión y las acciones. Si el MCP no está conectado, la skill indica usar PyQGIS como alternativa cuando corresponda.
-
-## Uso seguro y límites
-
-- El servidor predeterminado escucha solo en la computadora local, sin autenticación por token. Cualquier proceso local que alcance localhost:9876 puede controlar QGIS, incluso ejecutar PyQGIS. No expongas el socket a la red; si una instalación compartida lo requiere, configurá QGIS_MCP_TOKEN tanto en QGIS como en el servidor.
-- El MCP puede editar capas y entidades y ejecutar código PyQGIS. Confirmá el proyecto, las capas y el destino antes de operaciones destructivas o de sobrescritura.
-- Guardá el proyecto explícitamente cuando se quieran conservar los cambios. La skill pide verificar el resultado y el guardado.
-- Para operaciones MCP, mantené alineadas las versiones del plugin y del servidor.
-- No guardes tokens ni secretos en este repositorio.
+- De forma predeterminada, el servidor escucha solo en la computadora local y no usa un token. Cualquier proceso local que alcance `localhost:9876` puede enviar acciones a QGIS, incluida la ejecución de código PyQGIS. No expongas el socket a la red. Si una instalación compartida requiere acceso remoto, configurá `QGIS_MCP_TOKEN` tanto en QGIS como en el servidor.
+- El MCP puede modificar capas y entidades, ejecutar geoprocesos y código PyQGIS. Antes de una operación que sobrescriba o elimine información, revisá el proyecto, las capas y la ruta de destino.
+- Guardá el proyecto para conservar los cambios y comprobá el resultado después de cada operación relevante.
+- Mantené compatibles las versiones del complemento y el servidor.
+- No guardes tokens ni otros secretos en este repositorio.
 
 ## Actualización
 
-La instalación del equipo usa v0.14.1 fijada por URL para que todos partan de la misma versión. Antes de actualizar:
+La configuración del equipo fija la etiqueta v0.14.1 para que todas las computadoras partan de la misma versión. Antes de actualizar:
 
-1. Revisá la nueva versión y sus instrucciones en el repositorio upstream.
-2. Actualizá el plugin QGIS desde el administrador de complementos.
-3. Cambiá la etiqueta v0.14.1 de la configuración MCP por la etiqueta elegida.
-4. Reiniciá QGIS y Codex.
-5. Ejecutá diagnose y ping antes de continuar el trabajo.
-
-Para referencias adicionales, consultá [MCP en Codex](https://developers.openai.com/codex/mcp).
+1. Revisá la versión nueva y sus instrucciones en el proyecto upstream.
+2. Actualizá el complemento QGIS desde el administrador de complementos.
+3. Cambiá la etiqueta v0.14.1 en la configuración del servidor MCP por la nueva etiqueta elegida.
+4. Reiniciá QGIS y recargá el cliente MCP.
+5. Ejecutá `diagnose` y `ping` antes de continuar el trabajo.
