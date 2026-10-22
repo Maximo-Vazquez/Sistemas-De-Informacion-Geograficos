@@ -1,0 +1,47 @@
+# Identificación del documento (ISO/IEC/IEEE 15289). Actualizar version y versiones en cada sesión.
+titulo_proyecto: Visor SIG Chaco
+nombre_documento: Bitácora técnica – Visor SIG Chaco
+entregable: Documentación técnica del Trabajo Práctico Integrador
+organizacion:
+  - Universidad Tecnológica Nacional – Facultad Regional Resistencia
+  - French 414, Resistencia, Chaco, Argentina.
+autor: Vazquez Maximo Ezequiel
+responsables:
+  - Ing. Ilse Hodapp
+  - Ing. Rodrigo Valdés
+integrantes:
+  - Vazquez Maximo Ezequiel
+  - "[PENDIENTE] completar el resto del grupo (4 a 5 integrantes)"
+area: Sistemas de Información Geográfica – Ingeniería en Sistemas de Información
+
+portada:
+  organizacion:
+    - Universidad Tecnológica Nacional
+    - Facultad Regional Resistencia
+  titulo: Visor SIG Chaco
+  subtitulo: Bitácora técnica
+  descripcion: Trabajo Práctico Integrador – Ruta Nacional 11 en la Provincia del Chaco
+  pie:
+    - Sistemas de Información Geográfica – Electiva de 4° nivel
+    - Ingeniería en Sistemas de Información – Ciclo 2026
+
+encabezado:
+  - Visor SIG Chaco
+  - Bitácora técnica
+
+# SemVer: major al cerrar una entrega, minor por contenido nuevo, patch por correcciones.
+version: 0.2.0
+versiones:
+  - version: 0.1.0
+    fecha: 2026-10-22
+    cambios:
+      - Creación del documento
+      - Registro de la configuración de QGIS MCP y del mapa del Chaco
+      - Base Django del proyecto y ADR-0001 a ADR-0006
+  - version: 0.2.0
+    fecha: 2026-10-22
+    cambios:
+      - Acceso a Administración para cualquier cuenta de Google
+      - Base local gis_tpi y runserver que compila el frontend
+      - Dependencias unificadas en requirements.txt y logo de la UTN
+      - Globo 3D en la pantalla de inicio

@@ -1,0 +1,21 @@
+# Estado de cada consigna de docs/tpi/practico.pdf. estado: pendiente | en curso | completa
+- id: a.1
+  descripcion: Servidor de bases de datos espaciales con las capas vectoriales del SIG IGN 250
+  estado: pendiente
+  referencia: ADR-0003
+- id: a.2
+  descripcion: Servidor de mapas con servicios OGC (WMS y WFS)
+  estado: pendiente
+  referencia: "—"
+- id: a.3
+  descripcion: Aplicación web de visualización (navegación, capas, leyenda, escala, consultas, medición y edición)
+  estado: en curso
+  referencia: ADR-0001, ADR-0002
+- id: b
+  descripcion: Análisis de la RN 11 en el Chaco (km, población a 10 y 20 km, puentes) e informe
+  estado: pendiente
+  referencia: ADR-0006
+- id: c
+  descripcion: Mapa A4 en PDF con la traza, áreas de influencia, puentes y accidentes naturales
+  estado: pendiente
+  referencia: ADR-0006

@@ -1,0 +1,117 @@
+/* Formato de impresión de la bitácora: A4, encabezado y pie con recuadro, índice con puntos. */
+
+@page {
+  size: A4;
+  margin: 34mm 20mm 30mm 20mm;
+  @top-center {
+    content: element(encabezado);
+    width: 170mm;
+    vertical-align: bottom;
+    padding-bottom: 7mm;
+  }
+  @bottom-center {
+    content: element(pie);
+    width: 170mm;
+    vertical-align: top;
+    padding-top: 5mm;
+  }
+}
+
+@page :first {
+  margin: 18mm;
+  @top-center { content: none; }
+  @bottom-center { content: none; }
+}
+
+html {
+  font-family: "Times New Roman", "Liberation Serif", "Times", serif;
+  font-size: 11.5pt;
+  line-height: 1.65;
+  color: #111;
+}
+
+body { margin: 0; }
+
+/* Encabezado y pie (elementos que se repiten en cada página) */
+.encabezado { position: running(encabezado); }
+.encabezado table { width: 100%; border-collapse: collapse; border: 0.6pt solid #9a9a9a; }
+.encabezado td { padding: 3mm 4mm; vertical-align: middle; }
+.enc-logo { width: 34%; border-right: 0.6pt solid #9a9a9a; text-align: center; }
+.logo-encabezado { max-height: 11mm; max-width: 50mm; }
+.enc-texto p { margin: 0; color: #6b6b6b; font-size: 10pt; line-height: 1.7; }
+
+.pie { position: running(pie); }
+.pie table { width: 100%; height: 12mm; border-collapse: collapse; border: 0.6pt solid #9a9a9a; }
+.pie td { padding: 1.5mm 3mm; color: #6b6b6b; font-size: 9.5pt; line-height: 1.35; vertical-align: middle; }
+.pie p { margin: 0; }
+.pie-pagina { width: 26%; border-left: 0.6pt solid #9a9a9a; text-align: center; }
+.pie-pagina::after { content: "Página " counter(page) " de " counter(pages); }
+
+/* Portada */
+.portada {
+  height: 259mm;
+  box-sizing: border-box;
+  border: 0.6pt solid #9a9a9a;
+  padding: 22mm 18mm;
+  text-align: center;
+  page-break-after: always;
+}
+.portada-logo { height: 42mm; }
+.logo-portada { max-height: 38mm; max-width: 110mm; }
+.portada-organizacion { margin-top: 18mm; }
+.portada-organizacion p { margin: 0 0 3mm; }
+.portada-organizacion p:first-child { font-weight: bold; text-transform: uppercase; font-size: 13pt; }
+.portada-titulo { margin: 42mm 0 6mm; font-size: 30pt; line-height: 1.15; text-transform: uppercase; }
+.portada-subtitulo { font-weight: bold; font-size: 16pt; margin: 0 0 5mm; }
+.portada-descripcion { margin: 0; }
+.portada-pie { margin-top: 32mm; font-style: italic; }
+.portada-pie p { margin: 0 0 3mm; }
+
+/* Datos del proyecto, ficha y control de versiones */
+.preliminar { page-break-after: always; }
+.preliminar h2 {
+  font-size: 11.5pt;
+  font-weight: normal;
+  text-transform: uppercase;
+  color: #555;
+  margin: 9mm 0 3mm;
+}
+.preliminar table { width: 100%; border-collapse: collapse; font-size: 11pt; line-height: 1.3; }
+.preliminar td, .preliminar th { border: 0.8pt solid #111; padding: 1mm 2mm; vertical-align: top; text-align: left; }
+.preliminar td:first-child { width: 38%; }
+
+/* Índice */
+.indice { page-break-after: always; }
+.indice-titulo { font-size: 15pt; margin: 6mm 0 6mm; }
+.toc { list-style: none; margin: 0; padding: 0; }
+.toc li { margin: 0 0 2.4mm; }
+.toc a { color: inherit; text-decoration: none; display: block; }
+.toc .num { display: inline-block; width: 12mm; }
+.toc .n2 { padding-left: 8mm; }
+.toc .n2 .num { width: 14mm; }
+.toc a::after { content: leader("-") target-counter(attr(href), page); color: #111; }
+
+/* Cuerpo */
+.cuerpo { text-align: justify; }
+.cuerpo h1 { font-size: 17pt; margin: 9mm 0 4mm; line-height: 1.25; page-break-after: avoid; }
+.cuerpo h2 { font-size: 13pt; margin: 7mm 0 3mm; page-break-after: avoid; }
+.cuerpo h3 { font-size: 11.5pt; margin: 5mm 0 2mm; page-break-after: avoid; }
+.cuerpo h4 { font-size: 11.5pt; font-style: italic; margin: 4mm 0 2mm; }
+.cuerpo p { margin: 0 0 3mm; }
+.cuerpo ul, .cuerpo ol { margin: 0 0 3mm; padding-left: 7mm; }
+.cuerpo li { margin-bottom: 1.2mm; }
+.cuerpo code { font-family: "Consolas", "DejaVu Sans Mono", monospace; font-size: 9.5pt; background: #f1f1f1; padding: 0 1mm; }
+.cuerpo pre { background: #f4f4f4; border: 0.5pt solid #ccc; padding: 3mm; font-size: 9pt; white-space: pre-wrap; text-align: left; }
+.cuerpo pre code { background: none; padding: 0; }
+.cuerpo a { color: #1f4fd1; text-decoration: none; }
+
+.leyenda { font-style: italic; font-size: 9pt; color: #44546a; margin: 4mm 0 1.5mm !important; }
+
+.cuerpo table { width: 100%; border-collapse: collapse; font-size: 10.5pt; line-height: 1.45; margin: 0 0 5mm; text-align: left; }
+.cuerpo th { font-weight: bold; padding: 2mm 2.5mm; border-bottom: 1.6pt solid #c9c9c9; vertical-align: bottom; }
+.cuerpo td { padding: 2mm 2.5mm; vertical-align: top; }
+.cuerpo tbody tr:nth-child(odd) td { background: #ededed; }
+.cuerpo tbody td:first-child { font-weight: bold; }
+.cuerpo tr { page-break-inside: avoid; }
+
+.pendiente { color: #c27a12; font-style: italic; }
