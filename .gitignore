@@ -1,6 +1,29 @@
-# Insumos locales de Chaco (fuentes originales y archivo comprimido)
-/qgis/Chaco/datos/fuente/
-/qgis/Chaco/insumos/
+# Python
+/.venv/
+/venv/
+**/__pycache__/
+*.pyc
+/staticfiles/
+/media/
 
-# Copia temporal en la raíz de qgis mientras QGIS mantiene abierto el original
-/qgis/datos/
+# Entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Frontend (Vite)
+frontend/node_modules/
+frontend/dist/
+static/frontend/
+
+# Insumos pesados o ajenos del TPI
+/docs/tpi/sig_ign.zip
+# Documento de ejemplo de otra organización (referencia de formato de la bitácora)
+/docs/tpi/licencia-anual-segun-situacion-de-revista.pdf
+
+# Bitácora: el PDF se genera (CI lo publica como artifact); el .md generado sí se versiona
+/docs/bitacora/salida/*.pdf
+/docs/bitacora/salida/*.html
+
+# Herramientas
+.ruff_cache/
