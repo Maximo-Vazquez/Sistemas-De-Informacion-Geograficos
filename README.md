@@ -1,27 +1,49 @@
-# GIS
+# Visor SIG Chaco
 
-Repositorio de trabajo para proyectos de Sistemas de Información Geográfica. Cada proyecto de QGIS se organiza en su propia carpeta dentro de qgis.
+Aplicación web del Trabajo Práctico Integrador de Sistemas de Información Geográfica (UTN FRRe, 2026): capas del SIG IGN 250 sobre PostGIS, servicios WMS/WFS y un visor web, más el análisis de la Ruta Nacional 11 en el Chaco. La consigna está en [docs/tpi/practico.pdf](docs/tpi/practico.pdf).
+
+Estado actual: base de la aplicación (inicio, Administración con login de Google y paneles en preparación). El avance y las decisiones están en la [bitácora técnica](docs/bitacora/salida/bitacora.md).
 
 ## Primer inicio
 
-Cloná la rama de trabajo del equipo:
+Requisitos: Python 3.13, Node 24 con pnpm 10 (`corepack enable`) y Docker.
 
-    git clone --branch develop https://github.com/Maximo-Vazquez/Sistemas-De-Informacion-Geograficos.git GIS
+```powershell
+git clone --branch develop https://github.com/Maximo-Vazquez/Sistemas-De-Informacion-Geograficos.git GIS
+cd GIS
+python -m venv .venv
+.venv\Scripts\pip install -r requirements.txt
+copy .env.example .env            # completar la base y GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET
+docker compose up -d db
+.venv\Scripts\python manage.py migrate
+pnpm --dir frontend install
+$env:VITE_OUTPUT_DIR="../static/frontend"; pnpm --dir frontend exec vite build
+.venv\Scripts\python manage.py runserver
+```
 
-Abrí la carpeta GIS con tu cliente de trabajo para que detecte las instrucciones y la skill compartidas, si admite skills del repositorio.
+Abrí http://localhost:8000. Para el login con Google, registrá `http://localhost:8000/accounts/google/login/callback/` como URI de redirección en las credenciales OAuth. Cualquier cuenta de Google que inicie sesión accede a Administración.
 
 ## Estructura
 
-- qgis/Chaco/: proyecto del mapa de departamentos e hidrografía del Chaco.
-- .agents/skills/: instrucciones de trabajo con QGIS para herramientas compatibles con este formato de skills.
-- docs/qgis-mcp-y-skill.md: instalación, procedencia, configuración y mantenimiento del MCP y la skill.
+- `config/`, `apps/`, `templates/`: proyecto Django.
+- `frontend/`: React + Vite + shadcn (Base UI) y coss.
+- `k8s/`, `Dockerfile`, `.github/workflows/`: despliegue (imagen en GHCR por tag `v*`, deploy manual al VPS).
+- `docs/bitacora/`: fuentes de la bitácora; `python scripts/generar_bitacora.py` genera el Markdown y el PDF.
+- `docs/qgis-mcp-y-skill.md`: configuración de QGIS MCP para el análisis y la cartografía.
+- `AGENTS.md` y `.agents/skills/`: instrucciones para trabajar en el repositorio.
 
-Para agregar otro proyecto de QGIS, creá una carpeta hermana de Chaco dentro de qgis y guardá allí su archivo .qgz, datos, scripts y exportaciones.
+## Calidad
 
-## Automatización
+```powershell
+.venv\Scripts\ruff check .
+.venv\Scripts\python manage.py test --settings=config.settings.test
+pnpm --dir frontend typecheck
+```
 
-Seguí [la guía de QGIS MCP y la skill del equipo](docs/qgis-mcp-y-skill.md) para conectar un cliente MCP con QGIS.
+CI (`0-calidad`) corre lo mismo contra PostgreSQL, compila el frontend y verifica la bitácora.
 
-## Proyecto actual
+## Despliegue
 
-Abrí qgis/Chaco/Mapa_Chaco.qgz con QGIS. La descripción de datos y generación está en qgis/Chaco/README.md.
+1. Cargar en GitHub los secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `VPS_PORT`, `DJANGO_SECRET_KEY`, `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`.
+2. En el VPS, crear el secret `db-credentials-sig` (plantilla en `k8s/00-secret-db.yaml`) y `ghcr-cred` para descargar la imagen.
+3. Crear un tag `v*` (construye la imagen) y ejecutar el workflow **2. Deploy Manual a VPS**.

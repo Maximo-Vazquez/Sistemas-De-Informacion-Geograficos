@@ -1,0 +1,4 @@
+﻿interface:
+  display_name: "Estilo visual de Administración"
+  short_description: "Color e iconos con base neutra y estados semánticos"
+  default_prompt: "Aplicá $admin-visual-style a esta pantalla con acentos moderados y estados semánticos, reutilizando los componentes existentes."
