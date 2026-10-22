@@ -1,0 +1,10 @@
+{# Debe ejecutarse antes del CSS y los módulos: next-themes continúa desde el mismo tema. #}
+<script>
+  (function () {
+    var theme;
+    try { theme = localStorage.getItem('visor-sig-theme'); } catch (_) {}
+    var dark = theme === 'dark' || (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.classList.toggle('dark', dark);
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+  })();
+</script>

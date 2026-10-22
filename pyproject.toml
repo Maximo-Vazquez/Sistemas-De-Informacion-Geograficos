@@ -1,0 +1,39 @@
+[project]
+name = "visor-sig-chaco"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+# Reglas de calidad del backend (skill .agents/skills/django-backend).
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["**/migrations/**", "frontend", "staticfiles", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "DJ", "C90", "PLR", "SIM"]
+ignore = ["PLR2004"]  # números mágicos: los umbrales del dominio se nombran donde aportan
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-args = 5
+max-branches = 10
+max-returns = 4
+max-statements = 40
+
+[tool.ruff.lint.per-file-ignores]
+"config/settings/*.py" = ["F403", "F405"]
+
+# Largo de referencia por archivo (orientativo, se puede extender): scripts/check_file_length.py
+[tool.largo_archivos]
+python = 300
+typescript = 250
+excluir = [
+    "frontend/src/components/ui/",
+    "frontend/src/components/coss/",
+    # Soporte del composer de coss (biblioteca de terceros, se actualiza desde su registro)
+    "frontend/src/lib/composer-",
+    "frontend/src/hooks/use-composer-editor.ts",
+    "**/migrations/",
+]

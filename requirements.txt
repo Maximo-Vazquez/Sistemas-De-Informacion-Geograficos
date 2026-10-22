@@ -1,0 +1,18 @@
+# Aplicación
+Django==5.2.18
+django-allauth==65.20.1
+# allauth (Google) necesita requests, PyJWT y cryptography
+requests==2.34.2
+PyJWT==2.15.1
+cryptography==50.0.2
+psycopg[binary]==3.3.6
+python-dotenv==1.2.4
+gunicorn==26.2.0
+
+# Bitácora técnica (scripts/generar_bitacora.py)
+Markdown==3.11.2
+PyYAML==6.0.3
+weasyprint==70.0
+
+# Calidad
+ruff==0.17.2

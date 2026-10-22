@@ -1,0 +1,16 @@
+{% load static vite %}<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ titulo }} — {{ SITE_NAME }}</title>
+  <link rel="icon" href="{% static 'imagenes/logo.svg' %}" type="image/svg+xml">
+  {% include "includes/theme_init.html" %}
+  {% vite_assets entrada %}
+</head>
+<body>
+  {{ datos|json_script:datos_id }}
+  <div id="{{ raiz_id }}"></div>
+  <noscript>Activá JavaScript para usar {{ SITE_NAME }}.</noscript>
+</body>
+</html>
