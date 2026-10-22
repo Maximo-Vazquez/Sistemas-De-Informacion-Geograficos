@@ -1,0 +1,21 @@
+# Base de datos de desarrollo. Para la etapa GIS, cambiar la imagen por
+# postgis/postgis:17-3.5 y definir DB_ENGINE=django.contrib.gis.db.backends.postgis.
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: visor_sig
+      POSTGRES_USER: visor_sig
+      POSTGRES_PASSWORD: visor_sig
+    ports:
+      - "5432:5432"
+    volumes:
+      - datos_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U visor_sig -d visor_sig"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  datos_db:

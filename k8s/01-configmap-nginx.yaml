@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sig-nginx-conf
+  namespace: default
+data:
+  default.conf: |
+    server {
+        listen 80;
+        # Reemplazar por el dominio definitivo del proyecto.
+        server_name _;
+        client_max_body_size 10m;
+
+        # Estáticos que Django copia al volumen compartido al arrancar.
+        location /static/ {
+            alias /var/www/static/;
+            expires 30d;
+            add_header Cache-Control "public, max-age=2592000";
+        }
+
+        # Etapa GIS: GeoServer se publicará bajo /geoserver/ con su propio Service.
+
+        location / {
+            proxy_pass http://127.0.0.1:8000;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto https;
+        }
+    }

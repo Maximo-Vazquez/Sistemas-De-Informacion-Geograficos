@@ -1,0 +1,23 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.venv/
+venv/
+
+# El build del frontend se hace en la etapa Node del Dockerfile.
+frontend/node_modules
+frontend/dist
+static/frontend
+staticfiles
+
+# Documentación e insumos pesados: no forman parte de la imagen.
+docs/
+.agents/
+.claude/
+k8s/
