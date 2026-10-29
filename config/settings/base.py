@@ -18,6 +18,10 @@ CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", "")
 SITE_NAME = env_str("SITE_NAME", "Visor SIG Chaco")
 SITE_ID = 1
 
+# Servidor de mapas (GeoServer, ADR-0008). El visor lo consume desde el navegador.
+GEOSERVER_URL = env_str("GEOSERVER_URL", "http://localhost:8085/geoserver").rstrip("/")
+GEOSERVER_WORKSPACE = env_str("GEOSERVER_WORKSPACE", "ign")
+
 INSTALLED_APPS = [
     # Primero: su runserver (migra y compila el frontend) reemplaza al de staticfiles.
     "apps.core",

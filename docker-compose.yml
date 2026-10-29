@@ -1,4 +1,4 @@
-# Base de datos de desarrollo. Para la etapa GIS, cambiar la imagen por
+# Servicios de desarrollo. Base de datos: Para la etapa GIS, cambiar la imagen por
 # postgis/postgis:17-3.5 y definir DB_ENGINE=django.contrib.gis.db.backends.postgis.
 services:
   db:
@@ -17,5 +17,27 @@ services:
       timeout: 3s
       retries: 10
 
+  # Servidor de mapas WMS/WFS (ADR-0008). Consola: http://localhost:8085/geoserver
+  geoserver:
+    image: docker.osgeo.org/geoserver:2.27.2
+    environment:
+      GEOSERVER_ADMIN_USER: admin
+      GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_ADMIN_PASSWORD:-geoserver}
+      # El visor pide WMS/WFS desde el navegador (localhost:8000 -> localhost:8085).
+      CORS_ENABLED: "true"
+      CORS_ALLOWED_ORIGINS: "*"
+      SKIP_DEMO_DATA: "true"
+    ports:
+      - "${GEOSERVER_PORT:-8085}:8080"
+    volumes:
+      - datos_geoserver:/opt/geoserver_data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:8080/geoserver/web/ > /dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
 volumes:
   datos_db:
+  datos_geoserver:
