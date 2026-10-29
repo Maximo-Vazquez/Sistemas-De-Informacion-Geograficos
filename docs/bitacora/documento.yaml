@@ -30,7 +30,7 @@ encabezado:
   - Bitácora técnica
 
 # SemVer: major al cerrar una entrega, minor por contenido nuevo, patch por correcciones.
-version: 0.2.0
+version: 0.3.0
 versiones:
   - version: 0.1.0
     fecha: 2026-10-22
@@ -45,3 +45,9 @@ versiones:
       - Base local gis_tpi y runserver que compila el frontend
       - Dependencias unificadas en requirements.txt y logo de la UTN
       - Globo 3D en la pantalla de inicio
+      - Logo del equipo y botón estándar de Google
+  - version: 0.3.0
+    fecha: 2026-10-22
+    cambios:
+      - Pruebas de navegador con Playwright y capturas reproducibles
+      - ADR-0007

@@ -32,6 +32,11 @@ Abrí http://localhost:8000. Para el login con Google, registrá `http://localho
 - `docs/qgis-mcp-y-skill.md`: configuración de QGIS MCP para el análisis y la cartografía.
 - `AGENTS.md` y `.agents/skills/`: instrucciones para trabajar en el repositorio.
 
+## Pruebas de navegador y capturas
+
+- `pnpm --dir e2e probar`: pruebas Playwright con servidor y base propios (ver [e2e/README.md](e2e/README.md)).
+- `pnpm --dir e2e capturas`: capturas de pantalla reales en `docs/capturas/`.
+
 ## Calidad
 
 ```powershell

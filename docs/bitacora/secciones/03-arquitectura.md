@@ -26,6 +26,7 @@ Tabla: Tecnologías en uso
 | CI/CD | GitHub Actions | — | Calidad, imagen por tag `v*` y deploy manual |
 | Análisis SIG | QGIS + QGIS MCP | 4.2.2 / 0.14.1 | Análisis del punto b y mapa del punto c |
 | Documentación | Python + Markdown + WeasyPrint | 70.0 | Esta bitácora en PDF |
+| Pruebas de navegador | Playwright (Chromium) | 1.63 | Pruebas de flujos y capturas de pantalla |
 
 ## Componentes previstos
 

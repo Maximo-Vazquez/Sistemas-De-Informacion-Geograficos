@@ -32,7 +32,7 @@ Leer antes: `AGENTS.md`, `.agents/skills/frontend-components/SKILL.md`, `.agents
 ### Formularios largos o complejos
 - `contentWidth="editor"` + `FormLayout` (`components/admin/form-layout.tsx`): secciones a la izquierda y panel fijo a la derecha con **resumen en vivo**, `FormChecklist` (qué falta) y el botón principal siempre visible. En móvil, `mobileBar` fija abajo con lo esencial y el botón.
 - Pocas secciones (≈5) agrupadas por cómo se piensa el objeto, con `FormSection`: plegable, `summary` cuando está cerrada, `invalid` la abre y la marca. Al crear se abren las clave; al editar, plegadas con su resumen. El contenido queda montado (inputs de archivo y valores siguen en el `<form>`).
-- **Todo lo repetible** (planes, módulos, ítems…) con `EditableList` (`components/admin/editable-list.tsx`): una fila compacta por ítem y un **modal** para editar; validación por ítem en el modal; las filas con error muestran "Revisar". Los ítems viajan en el JSON oculto y se guardan con el resto. Los archivos **no** van en modales: quedan en una sección.
+- **Todo lo repetible** (atributos de una capa, puntos de un recorrido, ítems…) con `EditableList` (`components/admin/editable-list.tsx`): una fila compacta por ítem y un **modal** para editar; validación por ítem en el modal; las filas con error muestran "Revisar". Los ítems viajan en el JSON oculto y se guardan con el resto. Los archivos **no** van en modales: quedan en una sección.
 - Dependencias (tipo, categoría…): botón "+" junto al select que abre un modal y crea por `Accept: application/json` sin salir; el valor nuevo queda elegido.
 
 ## Detalle

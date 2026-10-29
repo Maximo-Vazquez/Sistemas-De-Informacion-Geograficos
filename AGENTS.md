@@ -13,12 +13,14 @@
 - `apps/administracion/`: panel; `contexto.py` arma el contrato `AdminPageData`, `navegacion.py` el sidebar.
 - `frontend/src/`: entradas `inicio.tsx`, `cuenta.tsx`, `admin-*.tsx`; features en `features/`; bibliotecas en `components/`.
 - `docs/bitacora/` + `scripts/generar_bitacora.py`: bitácora técnica.
+- `e2e/`: pruebas Playwright, capturas (`docs/capturas/`) y login de prueba (`apps/e2e/`, solo con `config.settings.e2e`). Ver `e2e/README.md`.
 
 ## Skills (leer antes de trabajar en cada área)
 - Backend Python/Django: `.agents/skills/django-backend/SKILL.md`.
 - UI: `frontend-components`, `admin-screens`, `admin-visual-style` (fuente de verdad del color), `data-tables`, `shadcn`, `coss`, `coss-particles`; diseño general en `.claude/skills/frontend-design`.
 - QGIS: `.agents/skills/qgis-mcp-workflows/SKILL.md` y `docs/qgis-mcp-y-skill.md`.
 - Bitácora: `.agents/skills/bitacora/SKILL.md`.
+- Pruebas de navegador y capturas: `e2e/README.md`.
 
 ## Reglas
 - Reutilizar componentes compartidos antes de crear nuevos; shadcn primero, coss para faltantes. Base UI compone con `render`, no `asChild`.
@@ -34,4 +36,5 @@
 .venv\Scripts\python manage.py test --settings=config.settings.test
 pnpm --dir frontend typecheck; pnpm --dir frontend build; pnpm --dir frontend check:colores
 .venv\Scripts\python scripts\generar_bitacora.py
+pnpm --dir e2e probar   # solo cuando haga falta o se pida
 ```
