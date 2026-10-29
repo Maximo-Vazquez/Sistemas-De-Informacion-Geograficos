@@ -14,6 +14,7 @@ def navegacion_admin():
             "label": "General",
             "items": [
                 {"id": "panel", "label": "Panel", "icon": "dashboard", "href": reverse("administracion:panel")},
+                {"id": "visor", "label": "Visor", "icon": "map", "href": reverse("administracion:visor")},
             ],
         },
     ]

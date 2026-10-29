@@ -4,6 +4,8 @@ Esta etapa no tiene datos: cada panel se declara con su propósito y se muestra
 vacío. Cuando exista PostGIS, cada panel recibe sus filas desde aquí.
 """
 
+from django.conf import settings
+
 from .contexto import datos_pagina_admin
 
 PANELES = [
@@ -42,4 +44,23 @@ def datos_panel(request):
         **datos_pagina_admin(request),
         "indicadores": [{**indicador, "valor": None} for indicador in INDICADORES],
         "paneles": PANELES,
+    }
+
+
+# Vista inicial del visor: la Provincia del Chaco (lon/lat, EPSG:4326).
+EXTENSION_CHACO = [-63.5, -28.1, -58.2, -24.0]
+
+
+def datos_visor(request):
+    base = settings.GEOSERVER_URL
+    espacio = settings.GEOSERVER_WORKSPACE
+    return {
+        **datos_pagina_admin(request),
+        "geoserver": {
+            "url": base,
+            "workspace": espacio,
+            "wmsUrl": f"{base}/{espacio}/wms",
+            "wfsUrl": f"{base}/{espacio}/wfs",
+        },
+        "extension": EXTENSION_CHACO,
     }
