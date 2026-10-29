@@ -4,7 +4,7 @@
 - Aplicación web del Trabajo Práctico Integrador de SIG (UTN FRRe, 2026). Consigna: `docs/tpi/practico.pdf`.
 - Django con plantillas mínimas que montan pantallas React + TypeScript + Vite + Tailwind v4. No es una SPA.
 - Autenticación estándar de Django con allauth y Google; no agregar proveedores OIDC propios ni JWT.
-- Etapa actual: base (inicio, Administración con paneles vacíos, login con Google). Siguiente: PostGIS, servidor de mapas WMS/WFS y visor.
+- Etapa actual: base (inicio, Administración, login con Google), GeoServer en Docker (`docker compose up -d geoserver`, puerto 8085) y visor OpenLayers en `/administracion/visor/`. Siguiente: PostGIS con las capas del IGN y funciones del visor.
 
 ## Estructura
 - `config/settings/`: `base`, `local` (por defecto en `manage.py`), `production` (Docker/k8s) y `test`. Entorno solo vía `config/settings/entorno.py`.

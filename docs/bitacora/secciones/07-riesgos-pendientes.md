@@ -18,4 +18,5 @@ Tabla: Riesgos identificados
 - [PENDIENTE] Cargar los secrets del deploy (`DJANGO_SECRET_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) y registrar la URI de redirección del dominio en Google.
 - [PENDIENTE] Instalar la extensión PostGIS en el PostgreSQL local.
 - [PENDIENTE] Definir el dominio de despliegue (nginx y `CSRF_TRUSTED_ORIGINS`).
-- [PENDIENTE] Elegir servidor de mapas y biblioteca de mapas (ADR).
+- [PENDIENTE] Publicar las capas del IGN en GeoServer (espacio de trabajo `ign`) una vez cargadas en PostGIS.
+- [PENDIENTE] Desplegar GeoServer en el VPS (manifiesto k8s) y definir su URL pública.

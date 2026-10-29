@@ -5,12 +5,12 @@
   referencia: ADR-0003
 - id: a.2
   descripcion: Servidor de mapas con servicios OGC (WMS y WFS)
-  estado: pendiente
-  referencia: "—"
+  estado: en curso
+  referencia: ADR-0008
 - id: a.3
   descripcion: Aplicación web de visualización (navegación, capas, leyenda, escala, consultas, medición y edición)
   estado: en curso
-  referencia: ADR-0001, ADR-0002
+  referencia: ADR-0001, ADR-0002, ADR-0009
 - id: b
   descripcion: Análisis de la RN 11 en el Chaco (km, población a 10 y 20 km, puentes) e informe
   estado: pendiente

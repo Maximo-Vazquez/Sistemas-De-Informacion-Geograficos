@@ -17,13 +17,14 @@
 | **Proyecto** | Visor SIG Chaco |
 | **Lugar de realización** | Universidad Tecnológica Nacional – Facultad Regional Resistencia<br>French 414, Resistencia, Chaco, Argentina. |
 | **Nombre del documento** | Bitácora técnica – Visor SIG Chaco |
-| **Versión/Edición** | 0.3.0 |
-| **Fecha de versión** | 22/10/2026 |
+| **Versión/Edición** | 0.4.0 |
+| **Fecha de versión** | 29/10/2026 |
 
 ## Control de versiones
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.4.0 | 29/10/2026 | GeoServer en Docker como servidor de mapas (ADR-0008); OpenLayers y primera versión del visor (ADR-0009) |
 | 0.3.0 | 22/10/2026 | Pruebas de navegador con Playwright y capturas reproducibles; ADR-0007 |
 | 0.2.0 | 22/10/2026 | Acceso a Administración para cualquier cuenta de Google; Base local gis_tpi y runserver que compila el frontend; Dependencias unificadas en requirements.txt y logo de la UTN; Globo 3D en la pantalla de inicio; Logo del equipo y botón estándar de Google |
 | 0.1.0 | 22/10/2026 | Creación del documento; Registro de la configuración de QGIS MCP y del mapa del Chaco; Base Django del proyecto y ADR-0001 a ADR-0006 |
@@ -104,12 +105,13 @@ Tabla: Tecnologías en uso
 | Análisis SIG | QGIS + QGIS MCP | 4.2.2 / 0.14.1 | Análisis del punto b y mapa del punto c |
 | Documentación | Python + Markdown + WeasyPrint | 70.0 | Esta bitácora en PDF |
 | Pruebas de navegador | Playwright (Chromium) | 1.63 | Pruebas de flujos y capturas de pantalla |
+| Servidor de mapas | GeoServer (Docker) | 2.27.2 | Servicios WMS y WFS de las capas (ADR-0008) |
+| Biblioteca de mapas | OpenLayers | 10.6.1 | Visor web de Administración (ADR-0009) |
 
 ## 3.3 Componentes previstos
 
 - **PostGIS** sobre PostgreSQL 17 para las capas del IGN (imagen `postgis/postgis`).
-- **Servidor de mapas** con WMS/WFS. [PENDIENTE] elegir entre GeoServer y QGIS Server (registrar ADR).
-- **Biblioteca de mapas** del visor. [PENDIENTE] elegir entre OpenLayers y Leaflet (registrar ADR).
+- Publicar las capas de PostGIS en GeoServer (espacio de trabajo `ign`).
 
 # 4 Estado de las consignas del TPI
 
@@ -120,8 +122,8 @@ Tabla: Estado de las consignas del TPI
 | Consigna | Descripción | Estado | Referencia |
 |---|---|---|---|
 | a.1 | Servidor de bases de datos espaciales con las capas vectoriales del SIG IGN 250 | Pendiente | ADR-0003 |
-| a.2 | Servidor de mapas con servicios OGC (WMS y WFS) | Pendiente | — |
-| a.3 | Aplicación web de visualización (navegación, capas, leyenda, escala, consultas, medición y edición) | En curso | ADR-0001, ADR-0002 |
+| a.2 | Servidor de mapas con servicios OGC (WMS y WFS) | En curso | ADR-0008 |
+| a.3 | Aplicación web de visualización (navegación, capas, leyenda, escala, consultas, medición y edición) | En curso | ADR-0001, ADR-0002, ADR-0009 |
 | b | Análisis de la RN 11 en el Chaco (km, población a 10 y 20 km, puentes) e informe | Pendiente | ADR-0006 |
 | c | Mapa A4 en PDF con la traza, áreas de influencia, puentes y accidentes naturales | Pendiente | ADR-0006 |
 
@@ -140,6 +142,8 @@ Tabla: Resumen de decisiones
 | ADR-0005 | Bitácora generada desde Markdown con Python y WeasyPrint | aceptada | 22/10/2026 |
 | ADR-0006 | QGIS automatizado con QGIS MCP para análisis y cartografía | aceptada | 24/09/2026 |
 | ADR-0007 | Playwright para pruebas de navegador y capturas de pantalla | aceptada | 22/10/2026 |
+| ADR-0008 | GeoServer como servidor de mapas WMS/WFS | aceptada | 29/10/2026 |
+| ADR-0009 | OpenLayers como biblioteca de mapas del visor | aceptada | 29/10/2026 |
 
 ## 5.1 ADR-0001 — Django con allauth y login de Google estándar
 
@@ -305,6 +309,67 @@ Playwright 1.63 en `e2e/` (pnpm, Chromium) con servidor Django y base propios (`
 - Las capturas usan la GPU real: con la GPU por software del modo headless, el globo WebGL sale negro.
 - El login de prueba no existe en producción: la app `apps.e2e` no está en los settings de la aplicación.
 
+## 5.8 ADR-0008 — GeoServer como servidor de mapas WMS/WFS
+
+*Estado: aceptada · Fecha: 29/10/2026*
+
+### Contexto
+
+La consigna a.2 exige un servidor de mapas que publique las capas del SIG IGN 250 con servicios OGC (WMS y WFS). El visor (a.3) consume esos servicios para mostrar capas, leyendas, consultas y para cargar elementos nuevos (WFS-T).
+
+### Opciones consideradas
+
+- GeoServer.
+- QGIS Server.
+- MapServer.
+
+### Decisión
+
+GeoServer 2.27.2, con la imagen oficial `docker.osgeo.org/geoserver` como servicio `geoserver` de `docker-compose.yml` (puerto 8085, consola en `http://localhost:8085/geoserver`). Razones:
+
+- Es el servidor recomendado en la clase de Sistemas de Información Geográfica, junto con OpenLayers para el visor (ADR-0009).
+- Publica WMS, WFS y WFS-T (edición) desde una consola web, sin escribir configuración a mano.
+- Se conecta directo a PostGIS como almacén de datos y genera la leyenda con `GetLegendGraphic`.
+- Tiene imagen Docker oficial, la misma en desarrollo y en el VPS.
+
+El visor lee la URL con `GEOSERVER_URL` y el espacio de trabajo con `GEOSERVER_WORKSPACE` (por defecto `ign`). La contraseña del usuario `admin` llega por `GEOSERVER_ADMIN_PASSWORD`.
+
+### Consecuencias
+
+- La configuración de GeoServer (almacenes, capas y estilos) vive en el volumen `datos_geoserver`, no en el repositorio.
+- CORS está habilitado en el contenedor porque el navegador pide WMS/WFS desde `localhost:8000` a `localhost:8085`.
+- Falta cargar las capas en PostGIS (a.1) y publicarlas en el espacio de trabajo `ign`.
+- QGIS sigue en uso para el análisis del punto b y el mapa del punto c (ADR-0006).
+
+## 5.9 ADR-0009 — OpenLayers como biblioteca de mapas del visor
+
+*Estado: aceptada · Fecha: 29/10/2026*
+
+### Contexto
+
+La consigna a.3 pide un visor web con navegación, activar y desactivar capas, leyenda y escala, consulta gráfica por punto y por rectángulo, medición de distancias y carga de elementos nuevos en una capa vectorial. Las capas llegan desde GeoServer por WMS y WFS (ADR-0008).
+
+### Opciones consideradas
+
+- OpenLayers.
+- Leaflet con plugins.
+- MapLibre GL.
+
+### Decisión
+
+OpenLayers 10.6.1 en el frontend React (`frontend/src/features/admin-visor/`). Razones:
+
+- Es la biblioteca recomendada en la clase de Sistemas de Información Geográfica, junto con GeoServer.
+- Trae de fábrica lo que pide la consigna: WMS y WFS, escala (`ScaleLine`), `GetFeatureInfo`, selección por rectángulo (`DragBox`), dibujo y medición (`Draw`, `ol/sphere`) y transacciones WFS-T.
+- Maneja proyecciones, necesario para medir en metros sobre datos en coordenadas geográficas.
+- Leaflet necesita plugins de terceros para medición, selección por rectángulo y WFS-T.
+
+### Consecuencias
+
+- El visor es una pantalla de Administración (`/administracion/visor/`) montada con `mountAdminPage`, sin cambiar la arquitectura Django + React.
+- Primera versión: fondo Argenmap del IGN (público, sin clave), vista inicial en el Chaco, zoom, escala, lista de capas leída del `GetCapabilities` con interruptores y leyenda por capa.
+- Pendiente: consulta por punto y rectángulo, medición y carga de elementos.
+
 # 6 Bitácora de trabajo
 
 Registro cronológico de las sesiones de trabajo.
@@ -424,6 +489,40 @@ Integrar Playwright para probar la aplicación en el navegador y generar captura
 - En las capturas el globo salía como un disco negro: la GPU por software del modo headless (SwiftShader) no renderiza bien cobe. Con la GPU real (`--use-angle=d3d11` en Windows) se ve correctamente; la app en un navegador normal no tenía el problema.
 - La prueba de cierre de sesión invalidaba la sesión compartida: ahora crea una sesión propia.
 
+## 6.5 29/10/2026 — GeoServer en Docker y visor con OpenLayers
+
+*Vazquez Maximo Ezequiel · Decisiones: ADR-0008, ADR-0009*
+
+### Objetivo
+
+Elegir el servidor de mapas y la biblioteca de mapas del visor, levantar el servidor en Docker local y armar la primera versión del visor.
+
+### Trabajo realizado
+
+- Se eligieron GeoServer y OpenLayers, los dos recomendados en la clase de Sistemas de Información Geográfica (ADR-0008 y ADR-0009).
+- Servicio `geoserver` en `docker-compose.yml`: imagen `docker.osgeo.org/geoserver:2.27.2`, CORS habilitado, sin datos de ejemplo y volumen `datos_geoserver`. Consola en `http://localhost:8085/geoserver` (usuario `admin`, contraseña por `GEOSERVER_ADMIN_PASSWORD`).
+- Espacio de trabajo `ign` creado por la API REST de GeoServer.
+- Variables `GEOSERVER_URL` y `GEOSERVER_WORKSPACE` en `config/settings/base.py` y `.env.example`.
+- Pantalla Administración → Visor (`/administracion/visor/`): mapa de OpenLayers 10.6.1 con fondo Argenmap del IGN (claro u oscuro según el tema), vista inicial en el Chaco, zoom, barra de escala, lista de capas leída del `GetCapabilities` de WMS con un interruptor por capa y la leyenda (`GetLegendGraphic`) de cada capa encendida. Si GeoServer no responde o no hay capas, lo indica.
+- Tests de Django del visor: redirección sin sesión y datos de GeoServer con sesión.
+
+### Verificación
+
+- `ruff check .`, tests de Django (13), `pnpm typecheck`, `pnpm build` y `check:colores` en verde.
+- `GetCapabilities` del espacio `ign` responde 200 con el encabezado CORS `Access-Control-Allow-Origin: *`.
+- No se revisó el visor en el navegador ni se agregaron pruebas de Playwright.
+
+### Problemas y soluciones
+
+- El puerto 8080 ya estaba ocupado por otro contenedor de la máquina: GeoServer se publica en el 8085 (configurable con `GEOSERVER_PORT`).
+- Los tiles de OpenStreetMap respondían 403 "Access blocked": sus servidores exigen el encabezado `Referer` y Django no lo envía a otros sitios (`SECURE_REFERRER_POLICY = same-origin`). Se probó CARTO, pero en el navegador pidió clave de API. El fondo quedó en Argenmap, el mapa base público del IGN: no pide clave y es la misma fuente que las capas del TPI.
+
+### Pendientes
+
+- Cargar las capas del SIG IGN 250 en PostGIS (a.1) y publicarlas en el espacio `ign`.
+- Visor: consulta por punto y rectángulo, medición de distancias y carga de elementos (WFS-T).
+- Desplegar GeoServer en el VPS.
+
 # 7 Riesgos y pendientes
 
 ## 7.1 Riesgos
@@ -444,7 +543,8 @@ Tabla: Riesgos identificados
 - [PENDIENTE] Cargar los secrets del deploy (`DJANGO_SECRET_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) y registrar la URI de redirección del dominio en Google.
 - [PENDIENTE] Instalar la extensión PostGIS en el PostgreSQL local.
 - [PENDIENTE] Definir el dominio de despliegue (nginx y `CSRF_TRUSTED_ORIGINS`).
-- [PENDIENTE] Elegir servidor de mapas y biblioteca de mapas (ADR).
+- [PENDIENTE] Publicar las capas del IGN en GeoServer (espacio de trabajo `ign`) una vez cargadas en PostGIS.
+- [PENDIENTE] Desplegar GeoServer en el VPS (manifiesto k8s) y definir su URL pública.
 
 # 8 Glosario
 

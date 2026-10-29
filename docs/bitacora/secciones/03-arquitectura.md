@@ -27,9 +27,10 @@ Tabla: Tecnologías en uso
 | Análisis SIG | QGIS + QGIS MCP | 4.2.2 / 0.14.1 | Análisis del punto b y mapa del punto c |
 | Documentación | Python + Markdown + WeasyPrint | 70.0 | Esta bitácora en PDF |
 | Pruebas de navegador | Playwright (Chromium) | 1.63 | Pruebas de flujos y capturas de pantalla |
+| Servidor de mapas | GeoServer (Docker) | 2.27.2 | Servicios WMS y WFS de las capas (ADR-0008) |
+| Biblioteca de mapas | OpenLayers | 10.6.1 | Visor web de Administración (ADR-0009) |
 
 ## Componentes previstos
 
 - **PostGIS** sobre PostgreSQL 17 para las capas del IGN (imagen `postgis/postgis`).
-- **Servidor de mapas** con WMS/WFS. [PENDIENTE] elegir entre GeoServer y QGIS Server (registrar ADR).
-- **Biblioteca de mapas** del visor. [PENDIENTE] elegir entre OpenLayers y Leaflet (registrar ADR).
+- Publicar las capas de PostGIS en GeoServer (espacio de trabajo `ign`).
