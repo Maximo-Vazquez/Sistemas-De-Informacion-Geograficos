@@ -1,0 +1,55 @@
+name: 3. Pruebas de navegador (manual)
+
+# Solo se ejecuta a mano desde "Run workflow".
+on:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DB_HOST: localhost
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME_E2E: gis_tpi_e2e
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: pip install -r requirements.txt
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: e2e/package.json
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Dependencias del frontend y de las pruebas
+        run: |
+          pnpm --dir frontend install --frozen-lockfile
+          pnpm --dir e2e install --frozen-lockfile
+          pnpm --dir e2e exec playwright install --with-deps chromium
+      - name: Pruebas
+        env:
+          PYTHON: python
+        run: pnpm --dir e2e probar
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: informe-playwright
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          retention-days: 14

@@ -27,3 +27,12 @@ static/frontend/
 
 # Herramientas
 .ruff_cache/
+
+# Pruebas de navegador (Playwright)
+e2e/node_modules/
+e2e/test-results/
+e2e/playwright-report/
+e2e/.auth/
+
+# Capturas generadas (pnpm --dir e2e capturas)
+/docs/capturas/

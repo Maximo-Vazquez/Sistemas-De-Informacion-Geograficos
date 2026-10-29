@@ -1,0 +1,21 @@
+{
+  "name": "visor-sig-e2e",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "packageManager": "pnpm@10.32.1",
+  "scripts": {
+    "instalar-navegadores": "playwright install chromium",
+    "probar": "playwright test --project=pruebas",
+    "probar-visible": "playwright test --project=pruebas --headed",
+    "probar-interactivo": "playwright test --ui",
+    "capturas": "playwright test --project=capturas",
+    "ver-informe": "playwright show-report",
+    "verificar-tipos": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "24.3.0",
+    "typescript": "5.9.2"
+  }
+}

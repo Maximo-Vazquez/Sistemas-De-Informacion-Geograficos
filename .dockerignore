@@ -21,3 +21,6 @@ docs/
 .agents/
 .claude/
 k8s/
+
+# Pruebas de navegador: no forman parte de la imagen.
+e2e/
