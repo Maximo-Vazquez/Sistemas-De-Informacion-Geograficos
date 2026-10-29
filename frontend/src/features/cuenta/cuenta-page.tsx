@@ -52,7 +52,7 @@ function contenidoError(data: CuentaData): Contenido {
     ),
     acciones: (
       <>
-        <IngresarConGoogle data={data}>Intentar de nuevo</IngresarConGoogle>
+        <IngresarConGoogle data={data} label="Intentar de nuevo con Google" />
         <VolverAlInicio data={data} />
       </>
     ),

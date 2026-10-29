@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 64" role="img" aria-labelledby="title desc">
+  <title id="title">Visor SIG Chaco</title>
+  <desc id="desc">Símbolo de capas de mapa con una ruta, acompañado por el nombre Visor SIG Chaco.</desc>
+  <g>
+    <path d="M8 42 32 56 56 42 M8 32 32 46 56 32" fill="none" stroke="#111827" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M8 22 32 10 56 22 32 36Z" fill="#1f4fd1"/>
+    <path d="M22 15 29 22 25 27 36 34" fill="none" stroke="#ffffff" stroke-width="4" stroke-linejoin="round"/>
+  </g>
+  <text x="80" y="41" fill="#111827" font-family="sans-serif" font-size="28" font-weight="600">Visor SIG Chaco</text>
+</svg>

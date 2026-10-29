@@ -15,8 +15,8 @@ export type ItemErrors = Record<string, string>
 type Summary = { title: ReactNode; description?: ReactNode; meta?: ReactNode }
 type Editing<T> = { index: number | null; draft: T; errors: ItemErrors }
 
-// Lista de ítems repetibles: una fila compacta por ítem y un modal para editar (patrón de las
-// variantes de la ficha de producto). Los cambios del modal se aplican al confirmar y viven en
+// Lista de ítems repetibles: una fila compacta por ítem y un modal para editar.
+// Los cambios del modal se aplican al confirmar y viven en
 // el estado del formulario: se guardan todos juntos con el botón principal de la página.
 export function EditableList<T>({
   noun,

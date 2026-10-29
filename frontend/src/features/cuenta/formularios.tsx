@@ -1,21 +1,11 @@
 import type { ReactNode } from "react"
-import { LogIn, LogOut } from "lucide-react"
+import { LogOut } from "lucide-react"
+import { GoogleLoginButton } from "@/components/app/google-login-button"
 import { Button } from "@/components/ui/button"
 import type { CuentaData } from "./types"
 
-// POST al login de Google de allauth (SOCIALACCOUNT_LOGIN_ON_GET = False).
-export function IngresarConGoogle({ data, children = "Ingresar con Google" }: { data: CuentaData; children?: ReactNode }) {
-  return (
-    <form method="post" action={data.googleUrl} className="w-full">
-      <input type="hidden" name="csrfmiddlewaretoken" value={data.csrf} />
-      <input type="hidden" name="process" value="login" />
-      {data.next && <input type="hidden" name="next" value={data.next} />}
-      <Button type="submit" size="lg" className="w-full">
-        <LogIn data-icon="inline-start" />
-        {children}
-      </Button>
-    </form>
-  )
+export function IngresarConGoogle({ data, label }: { data: CuentaData; label?: string }) {
+  return <GoogleLoginButton action={data.googleUrl} csrf={data.csrf} next={data.next} label={label} className="w-full" />
 }
 
 export function CerrarSesion({

@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import { IconTile } from "./visual"
 
-// Formularios largos (patrón de la ficha de producto): secciones plegables a la izquierda y un
+// Formularios largos: secciones plegables a la izquierda y un
 // panel fijo a la derecha con el resumen en vivo y las acciones. En móvil el panel se oculta y
 // `mobileBar` queda fijo abajo con lo esencial (progreso y botón principal).
 export function FormLayout({

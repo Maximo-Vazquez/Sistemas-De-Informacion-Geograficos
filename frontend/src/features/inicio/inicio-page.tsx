@@ -1,5 +1,6 @@
-import { LayoutDashboard, LogIn, MapPinned } from "lucide-react"
+import { LayoutDashboard, MapPinned } from "lucide-react"
 import { ChacoGlobe } from "@/components/app/chaco-globe"
+import { GoogleLoginButton } from "@/components/app/google-login-button"
 import { Brand, PublicShell } from "@/components/app/public-shell"
 import { IconTile, StatusIndicator } from "@/components/admin/visual"
 import { Button } from "@/components/ui/button"
@@ -16,16 +17,7 @@ function AccionPrincipal({ data }: { data: InicioData }) {
       </Button>
     )
   }
-  return (
-    <form method="post" action={data.loginUrl}>
-      <input type="hidden" name="csrfmiddlewaretoken" value={data.csrf} />
-      <input type="hidden" name="process" value="login" />
-      <Button size="lg" type="submit">
-        <LogIn data-icon="inline-start" />
-        Ingresar con Google
-      </Button>
-    </form>
-  )
+  return <GoogleLoginButton action={data.loginUrl} csrf={data.csrf} />
 }
 
 function Consignas({ data }: { data: InicioData }) {
