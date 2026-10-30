@@ -18,6 +18,7 @@ static/frontend/
 
 # Insumos pesados o ajenos del TPI
 /docs/tpi/sig_ign.zip
+/docs/tpi/sig_ign/
 # Documento de ejemplo de otra organización (referencia de formato de la bitácora)
 /docs/tpi/licencia-anual-segun-situacion-de-revista.pdf
 
