@@ -15,7 +15,7 @@ Elegir el servidor de mapas y la biblioteca de mapas del visor, levantar el serv
 - Servicio `geoserver` en `docker-compose.yml`: imagen `docker.osgeo.org/geoserver:2.27.2`, CORS habilitado, sin datos de ejemplo y volumen `datos_geoserver`. Consola en `http://localhost:8085/geoserver` (usuario `admin`, contraseña por `GEOSERVER_ADMIN_PASSWORD`).
 - Espacio de trabajo `ign` creado por la API REST de GeoServer.
 - Variables `GEOSERVER_URL` y `GEOSERVER_WORKSPACE` en `config/settings/base.py` y `.env.example`.
-- Pantalla Administración → Visor (`/administracion/visor/`): mapa de OpenLayers 10.6.1 con fondo Argenmap del IGN (claro u oscuro según el tema), vista inicial en el Chaco, zoom, barra de escala, lista de capas leída del `GetCapabilities` de WMS con un interruptor por capa y la leyenda (`GetLegendGraphic`) de cada capa encendida. Si GeoServer no responde o no hay capas, lo indica.
+- Pantalla Administración → Visor (`/administracion/visor/`): mapa de OpenLayers 10.6.1 sin mapa de fondo externo (se probaron OpenStreetMap, CARTO y Argenmap; ver problemas), vista inicial en el Chaco, zoom, barra de escala, lista de capas leída del `GetCapabilities` de WMS con un interruptor por capa y la leyenda (`GetLegendGraphic`) de cada capa encendida. Si GeoServer no responde o no hay capas, lo indica.
 - Tests de Django del visor: redirección sin sesión y datos de GeoServer con sesión.
 
 ## Verificación
@@ -27,7 +27,7 @@ Elegir el servidor de mapas y la biblioteca de mapas del visor, levantar el serv
 ## Problemas y soluciones
 
 - El puerto 8080 ya estaba ocupado por otro contenedor de la máquina: GeoServer se publica en el 8085 (configurable con `GEOSERVER_PORT`).
-- Los tiles de OpenStreetMap respondían 403 "Access blocked": sus servidores exigen el encabezado `Referer` y Django no lo envía a otros sitios (`SECURE_REFERRER_POLICY = same-origin`). Se probó CARTO, pero en el navegador pidió clave de API. El fondo quedó en Argenmap, el mapa base público del IGN: no pide clave y es la misma fuente que las capas del TPI.
+- Los tiles de OpenStreetMap respondían 403 "Access blocked": sus servidores exigen el encabezado `Referer` y Django no lo envía a otros sitios (`SECURE_REFERRER_POLICY = same-origin`). Se probó CARTO, pero en el navegador pidió clave de API. Después se pasó a Argenmap del IGN y, por último, se quitó el fondo: las 47 capas del IGN ya forman el mapa base y la consigna no pide un fondo externo. El visor arranca con `provincias` encendida.
 
 ## Pendientes
 

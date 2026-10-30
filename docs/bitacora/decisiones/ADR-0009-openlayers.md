@@ -27,5 +27,5 @@ OpenLayers 10.6.1 en el frontend React (`frontend/src/features/admin-visor/`). R
 ## Consecuencias
 
 - El visor es una pantalla de Administración (`/administracion/visor/`) montada con `mountAdminPage`, sin cambiar la arquitectura Django + React.
-- Primera versión: fondo Argenmap del IGN (público, sin clave), vista inicial en el Chaco, zoom, escala, lista de capas leída del `GetCapabilities` con interruptores y leyenda por capa.
+- Primera versión: sin mapa de fondo externo (las capas del IGN hacen de base; arranca con `provincias`), vista inicial en el Chaco, zoom, escala, lista de capas leída del `GetCapabilities` con interruptores y leyenda por capa.
 - Pendiente: consulta por punto y rectángulo, medición y carga de elementos.

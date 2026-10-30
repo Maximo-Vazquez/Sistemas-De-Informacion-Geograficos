@@ -17,13 +17,15 @@
 | **Proyecto** | Visor SIG Chaco |
 | **Lugar de realización** | Universidad Tecnológica Nacional – Facultad Regional Resistencia<br>French 414, Resistencia, Chaco, Argentina. |
 | **Nombre del documento** | Bitácora técnica – Visor SIG Chaco |
-| **Versión/Edición** | 0.4.0 |
+| **Versión/Edición** | 0.6.0 |
 | **Fecha de versión** | 29/10/2026 |
 
 ## Control de versiones
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.6.0 | 29/10/2026 | Visor con consulta por punto y área, medición, carga de elementos y leyenda con clases (ADR-0011); Pruebas de navegador del visor |
+| 0.5.0 | 29/10/2026 | PostGIS en Docker con las 47 capas del SIG IGN 250 (ADR-0010); Capas publicadas en GeoServer |
 | 0.4.0 | 29/10/2026 | GeoServer en Docker como servidor de mapas (ADR-0008); OpenLayers y primera versión del visor (ADR-0009) |
 | 0.3.0 | 22/10/2026 | Pruebas de navegador con Playwright y capturas reproducibles; ADR-0007 |
 | 0.2.0 | 22/10/2026 | Acceso a Administración para cualquier cuenta de Google; Base local gis_tpi y runserver que compila el frontend; Dependencias unificadas en requirements.txt y logo de la UTN; Globo 3D en la pantalla de inicio; Logo del equipo y botón estándar de Google |
@@ -105,13 +107,15 @@ Tabla: Tecnologías en uso
 | Análisis SIG | QGIS + QGIS MCP | 4.2.2 / 0.14.1 | Análisis del punto b y mapa del punto c |
 | Documentación | Python + Markdown + WeasyPrint | 70.0 | Esta bitácora en PDF |
 | Pruebas de navegador | Playwright (Chromium) | 1.63 | Pruebas de flujos y capturas de pantalla |
+| Base espacial | PostGIS (Docker) | 17-3.5 | 47 capas del SIG IGN 250 (ADR-0010) |
+| Carga de capas | GDAL ogr2ogr (Docker) | 3.11.3 | Shapefiles a PostGIS (`scripts/cargar_capas_ign.py`) |
 | Servidor de mapas | GeoServer (Docker) | 2.27.2 | Servicios WMS y WFS de las capas (ADR-0008) |
 | Biblioteca de mapas | OpenLayers | 10.6.1 | Visor web de Administración (ADR-0009) |
+| Estilos de capas | SLD 1.0 (`geoserver/estilos/`) | — | Leyenda con clases (ADR-0011) |
 
 ## 3.3 Componentes previstos
 
-- **PostGIS** sobre PostgreSQL 17 para las capas del IGN (imagen `postgis/postgis`).
-- Publicar las capas de PostGIS en GeoServer (espacio de trabajo `ign`).
+- Estilos propios para el resto de las capas del IGN.
 
 # 4 Estado de las consignas del TPI
 
@@ -121,9 +125,9 @@ Tabla: Estado de las consignas del TPI
 
 | Consigna | Descripción | Estado | Referencia |
 |---|---|---|---|
-| a.1 | Servidor de bases de datos espaciales con las capas vectoriales del SIG IGN 250 | Pendiente | ADR-0003 |
-| a.2 | Servidor de mapas con servicios OGC (WMS y WFS) | En curso | ADR-0008 |
-| a.3 | Aplicación web de visualización (navegación, capas, leyenda, escala, consultas, medición y edición) | En curso | ADR-0001, ADR-0002, ADR-0009 |
+| a.1 | Servidor de bases de datos espaciales con las capas vectoriales del SIG IGN 250 | Completa | ADR-0003, ADR-0010 |
+| a.2 | Servidor de mapas con servicios OGC (WMS y WFS) | Completa | ADR-0008 |
+| a.3 | Aplicación web de visualización (navegación, capas, leyenda, escala, consultas, medición y edición) | Completa | ADR-0001, ADR-0002, ADR-0009, ADR-0011 |
 | b | Análisis de la RN 11 en el Chaco (km, población a 10 y 20 km, puentes) e informe | Pendiente | ADR-0006 |
 | c | Mapa A4 en PDF con la traza, áreas de influencia, puentes y accidentes naturales | Pendiente | ADR-0006 |
 
@@ -144,6 +148,8 @@ Tabla: Resumen de decisiones
 | ADR-0007 | Playwright para pruebas de navegador y capturas de pantalla | aceptada | 22/10/2026 |
 | ADR-0008 | GeoServer como servidor de mapas WMS/WFS | aceptada | 29/10/2026 |
 | ADR-0009 | OpenLayers como biblioteca de mapas del visor | aceptada | 29/10/2026 |
+| ADR-0010 | PostGIS en Docker para las capas del SIG IGN 250 | aceptada | 29/10/2026 |
+| ADR-0011 | Carga de elementos por WFS-T a través de Django y estilos SLD versionados | aceptada | 29/10/2026 |
 
 ## 5.1 ADR-0001 — Django con allauth y login de Google estándar
 
@@ -367,8 +373,62 @@ OpenLayers 10.6.1 en el frontend React (`frontend/src/features/admin-visor/`). R
 ### Consecuencias
 
 - El visor es una pantalla de Administración (`/administracion/visor/`) montada con `mountAdminPage`, sin cambiar la arquitectura Django + React.
-- Primera versión: fondo Argenmap del IGN (público, sin clave), vista inicial en el Chaco, zoom, escala, lista de capas leída del `GetCapabilities` con interruptores y leyenda por capa.
+- Primera versión: sin mapa de fondo externo (las capas del IGN hacen de base; arranca con `provincias`), vista inicial en el Chaco, zoom, escala, lista de capas leída del `GetCapabilities` con interruptores y leyenda por capa.
 - Pendiente: consulta por punto y rectángulo, medición y carga de elementos.
+
+## 5.10 ADR-0010 — PostGIS en Docker para las capas del SIG IGN 250
+
+*Estado: aceptada · Fecha: 29/10/2026*
+
+### Contexto
+
+La consigna a.1 pide un servidor de bases de datos espaciales con las capas vectoriales del SIG IGN 250. ADR-0003 preveía sumar PostGIS a la base de la aplicación más adelante. GeoServer (ADR-0008) corre en Docker y necesita llegar a la base por la red de Compose.
+
+### Opciones consideradas
+
+- Instalar la extensión PostGIS en el PostgreSQL local (`gis_tpi`).
+- Un contenedor PostGIS propio para las capas, separado de la base de la aplicación.
+
+### Decisión
+
+Servicio `postgis` en `docker-compose.yml` con la imagen `postgis/postgis:17-3.5`, base `sig_ign`, puerto 5433 en el host (el 5432 lo usa el PostgreSQL local) y volumen `datos_postgis`. La base de la aplicación Django no cambia.
+
+Las 47 capas se cargan con `python scripts/cargar_capas_ign.py`, que usa `ogr2ogr` de la imagen oficial de GDAL dentro de la red de Compose y después las publica en GeoServer por su API REST (almacén `sig_ign`, espacio `ign`).
+
+### Consecuencias
+
+- No hay que instalar PostGIS ni GDAL en la máquina: alcanza con Docker.
+- GeoServer se conecta a la base con el nombre de servicio `postgis`.
+- Las tablas usan nombres en minúscula y sin acentos (`Líneas_de_Conducción_Ene` → `lineas_de_conduccion_ene`); el título de la capa en GeoServer conserva el nombre original.
+- La carga es reproducible: el script recrea las tablas y salta las capas ya publicadas.
+- Para el VPS falta decidir si PostGIS va en el mismo clúster o como servicio aparte.
+
+## 5.11 ADR-0011 — Carga de elementos por WFS-T a través de Django y estilos SLD versionados
+
+*Estado: aceptada · Fecha: 29/10/2026*
+
+### Contexto
+
+La consigna a.3 pide cargar elementos nuevos (geometría y atributos) en una capa vectorial y mostrar la leyenda con las clases de la simbología. GeoServer exige credenciales de administración para escribir por WFS-T, y las capas publicadas usaban el estilo por defecto (una sola clase).
+
+### Opciones consideradas
+
+- WFS-T directo desde el navegador con escritura anónima habilitada en GeoServer.
+- WFS-T armado en el navegador y reenviado por Django con las credenciales de GeoServer.
+- Insertar directo en PostGIS desde Django, sin WFS-T.
+
+### Decisión
+
+- El visor arma la transacción con `ol/format/WFS` y la envía a `POST /administracion/visor/transaccion/` (sesión y CSRF). `apps/administracion/services.py` acepta solo `Insert` en las capas de `GEOSERVER_CAPAS_EDITABLES` y la reenvía a GeoServer con `GEOSERVER_ADMIN_USER`/`GEOSERVER_ADMIN_PASSWORD`. Rechaza `Update`, `Delete`, otras capas y XML inválido.
+- La capa editable es `elementos_relevados` (PostGIS, geometría genérica, campos nombre, categoría, descripción, responsable y fecha). No se tocan las capas del IGN.
+- Los estilos con clases viven en `geoserver/estilos/*.sld` y `scripts/cargar_capas_ign.py` los sube a GeoServer: red vial por tipo, localidades por jerarquía, cursos de agua por régimen, espejos de agua por tipo, puentes, provincias y elementos relevados por geometría.
+
+### Consecuencias
+
+- La clave de GeoServer nunca llega al navegador y el visor solo puede agregar, no modificar ni borrar.
+- Se sigue usando WFS-T, el estándar OGC que se ve en la materia.
+- Los estilos son reproducibles: se regeneran con el script en cualquier GeoServer.
+- Las demás 41 capas del IGN siguen con el estilo por defecto de GeoServer.
 
 # 6 Bitácora de trabajo
 
@@ -489,7 +549,39 @@ Integrar Playwright para probar la aplicación en el navegador y generar captura
 - En las capturas el globo salía como un disco negro: la GPU por software del modo headless (SwiftShader) no renderiza bien cobe. Con la GPU real (`--use-angle=d3d11` en Windows) se ve correctamente; la app en un navegador normal no tenía el problema.
 - La prueba de cierre de sesión invalidaba la sesión compartida: ahora crea una sesión propia.
 
-## 6.5 29/10/2026 — GeoServer en Docker y visor con OpenLayers
+## 6.5 29/10/2026 — PostGIS en Docker y carga de las capas del IGN
+
+*Vazquez Maximo Ezequiel · Decisiones: ADR-0010*
+
+### Objetivo
+
+Levantar una base espacial en Docker, cargar todas las capas del SIG IGN 250 y publicarlas en GeoServer.
+
+### Trabajo realizado
+
+- Servicio `postgis` en `docker-compose.yml` (`postgis/postgis:17-3.5`, base `sig_ign`, puerto 5433). GeoServer arranca después de que PostGIS está sano.
+- `scripts/cargar_capas_ign.py`: descomprime `docs/tpi/sig_ign.zip` (la carpeta extraída no se versiona), carga cada shapefile con `ogr2ogr` (imagen `ghcr.io/osgeo/gdal:ubuntu-small-3.11.3`) en EPSG:4326, geometrías multiparte, columna `geom` e índice espacial, y publica cada tabla en GeoServer.
+- Se cargaron y publicaron las 47 capas en el espacio `ign` (almacén `sig_ign`).
+
+### Verificación
+
+- 47 tablas espaciales en `public`. Ejemplos: `red_vial` 118.955 registros, `localidades` 10.804 y `puente_red_vial_puntos` 3.852.
+- Acentos correctos en atributos y nombres de columnas (por ejemplo "Colonia Peñas Blancas", `precisión`).
+- WMS `GetCapabilities` lista las 47 capas; `GetMap` de `provincias` y `red_vial` sobre el Chaco devuelve una imagen PNG.
+- WFS `GetFeature` en GeoJSON responde para `puente_red_vial_puntos`.
+- No se revisó el visor en el navegador con las capas cargadas.
+
+### Problemas y soluciones
+
+- Los `.dbf` del IGN están en Windows-1252 aunque `Provincias.cpg` declara UTF-8: se carga todo con `SHAPE_ENCODING=CP1252` (Provincias no tiene acentos, así que no la afecta).
+- El puerto 5432 lo usa el PostgreSQL local: PostGIS se publica en el 5433.
+
+### Pendientes
+
+- Estilos propios en GeoServer: hoy cada capa usa el estilo por defecto (punto, línea o polígono).
+- `localidades.canthab` trae la cantidad de habitantes: base para la población a 10 y 20 km del punto b.
+
+## 6.6 29/10/2026 — GeoServer en Docker y visor con OpenLayers
 
 *Vazquez Maximo Ezequiel · Decisiones: ADR-0008, ADR-0009*
 
@@ -503,7 +595,7 @@ Elegir el servidor de mapas y la biblioteca de mapas del visor, levantar el serv
 - Servicio `geoserver` en `docker-compose.yml`: imagen `docker.osgeo.org/geoserver:2.27.2`, CORS habilitado, sin datos de ejemplo y volumen `datos_geoserver`. Consola en `http://localhost:8085/geoserver` (usuario `admin`, contraseña por `GEOSERVER_ADMIN_PASSWORD`).
 - Espacio de trabajo `ign` creado por la API REST de GeoServer.
 - Variables `GEOSERVER_URL` y `GEOSERVER_WORKSPACE` en `config/settings/base.py` y `.env.example`.
-- Pantalla Administración → Visor (`/administracion/visor/`): mapa de OpenLayers 10.6.1 con fondo Argenmap del IGN (claro u oscuro según el tema), vista inicial en el Chaco, zoom, barra de escala, lista de capas leída del `GetCapabilities` de WMS con un interruptor por capa y la leyenda (`GetLegendGraphic`) de cada capa encendida. Si GeoServer no responde o no hay capas, lo indica.
+- Pantalla Administración → Visor (`/administracion/visor/`): mapa de OpenLayers 10.6.1 sin mapa de fondo externo (se probaron OpenStreetMap, CARTO y Argenmap; ver problemas), vista inicial en el Chaco, zoom, barra de escala, lista de capas leída del `GetCapabilities` de WMS con un interruptor por capa y la leyenda (`GetLegendGraphic`) de cada capa encendida. Si GeoServer no responde o no hay capas, lo indica.
 - Tests de Django del visor: redirección sin sesión y datos de GeoServer con sesión.
 
 ### Verificación
@@ -515,13 +607,51 @@ Elegir el servidor de mapas y la biblioteca de mapas del visor, levantar el serv
 ### Problemas y soluciones
 
 - El puerto 8080 ya estaba ocupado por otro contenedor de la máquina: GeoServer se publica en el 8085 (configurable con `GEOSERVER_PORT`).
-- Los tiles de OpenStreetMap respondían 403 "Access blocked": sus servidores exigen el encabezado `Referer` y Django no lo envía a otros sitios (`SECURE_REFERRER_POLICY = same-origin`). Se probó CARTO, pero en el navegador pidió clave de API. El fondo quedó en Argenmap, el mapa base público del IGN: no pide clave y es la misma fuente que las capas del TPI.
+- Los tiles de OpenStreetMap respondían 403 "Access blocked": sus servidores exigen el encabezado `Referer` y Django no lo envía a otros sitios (`SECURE_REFERRER_POLICY = same-origin`). Se probó CARTO, pero en el navegador pidió clave de API. Después se pasó a Argenmap del IGN y, por último, se quitó el fondo: las 47 capas del IGN ya forman el mapa base y la consigna no pide un fondo externo. El visor arranca con `provincias` encendida.
 
 ### Pendientes
 
 - Cargar las capas del SIG IGN 250 en PostGIS (a.1) y publicarlas en el espacio `ign`.
 - Visor: consulta por punto y rectángulo, medición de distancias y carga de elementos (WFS-T).
 - Desplegar GeoServer en el VPS.
+
+## 6.7 29/10/2026 — Visor completo con las funciones de la consigna a.3
+
+*Vazquez Maximo Ezequiel · Decisiones: ADR-0011*
+
+### Objetivo
+
+Rehacer el visor para cumplir todas las funciones de la consigna a.3, con cada herramienta separada y una interfaz fácil de usar.
+
+### Trabajo realizado
+
+- Visor reorganizado en `frontend/src/features/admin-visor/`: `mapa/` (mapa, capas WMS, capas propias, estilos y estado), `herramientas/` (un hook por herramienta), `ui/` (barra, paneles y controles) y `ogc.ts` (WMS, WFS y WFS-T).
+- Barra de herramientas a la izquierda del mapa, una activa por vez y con atajo de teclado: Navegar (V), Consultar punto (I), Consultar área (R), Medir distancia (M) y Agregar elemento (A). Esc vuelve a Navegar.
+- Panel lateral con pestañas: **Capas** (47 capas agrupadas por tema, búsqueda sin acentos, interruptor y opacidad por capa) y **Leyenda** (clases de cada capa encendida con `GetLegendGraphic`). En el celular se abre como panel deslizable.
+- Consulta por punto (`GetFeatureInfo` de todas las capas encendidas) y por área (`GetFeature` WFS con filtro BBOX, hasta 50 por capa con el total). Los resultados se resaltan en el mapa; al elegir uno se encuadra y se ven sus atributos.
+- Medición geodésica de varios tramos con la distancia en vivo junto al puntero, lista de mediciones y total.
+- Carga de elementos: punto, línea o polígono, con vértices editables antes de guardar y formulario armado desde `DescribeFeatureType`. Se guarda por WFS-T a través de Django (ADR-0011).
+- Controles de zoom y "Ver todo el Chaco"; barra de estado con escala gráfica y numérica y coordenadas del puntero.
+- Estilos SLD con clases para red vial, localidades, cursos y espejos de agua, puentes, provincias y elementos relevados (`geoserver/estilos/`).
+- Capa editable `elementos_relevados` creada y publicada por `scripts/cargar_capas_ign.py`.
+- Se quitó el mapa de fondo externo: arrancan encendidas provincias, red vial y localidades.
+
+### Verificación
+
+- Pruebas de navegador `e2e/pruebas/visor.spec.ts` (5): capas y leyenda, consulta por punto, consulta por área, medición e inserción de un punto con atributos, que se borra al terminar. Suite completa: 14 en verde.
+- Tests de Django: 19 en verde, con el proxy WFS-T (rechaza borrar, capas no editables y XML inválido; reenvía con credenciales).
+- `ruff`, `pnpm typecheck`, `pnpm build` y `check:colores` en verde.
+- Capturas revisadas en tema claro y oscuro a 1440 × 900. No se revisó a mano en el celular.
+
+### Problemas y soluciones
+
+- GeoServer pide credenciales para escribir por WFS-T: la transacción pasa por Django, que solo permite inserciones en capas editables.
+- Los estilos del mapa no pueden escribir colores en las features (`check:colores`): `lib/map-theme.ts` lee los tokens del tema al dibujar.
+
+### Pendientes
+
+- Estilos propios para las otras 41 capas del IGN.
+- Las etiquetas de GeoServer tienen halo blanco, que en tema oscuro resalta mucho.
 
 # 7 Riesgos y pendientes
 
@@ -541,10 +671,9 @@ Tabla: Riesgos identificados
 
 - [PENDIENTE] Completar los integrantes del grupo en `docs/bitacora/documento.yaml`.
 - [PENDIENTE] Cargar los secrets del deploy (`DJANGO_SECRET_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) y registrar la URI de redirección del dominio en Google.
-- [PENDIENTE] Instalar la extensión PostGIS en el PostgreSQL local.
 - [PENDIENTE] Definir el dominio de despliegue (nginx y `CSRF_TRUSTED_ORIGINS`).
-- [PENDIENTE] Publicar las capas del IGN en GeoServer (espacio de trabajo `ign`) una vez cargadas en PostGIS.
-- [PENDIENTE] Desplegar GeoServer en el VPS (manifiesto k8s) y definir su URL pública.
+- [PENDIENTE] Estilos propios para las 41 capas del IGN que siguen con el estilo por defecto.
+- [PENDIENTE] Desplegar PostGIS y GeoServer en el VPS (manifiesto k8s) y definir su URL pública.
 
 # 8 Glosario
 

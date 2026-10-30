@@ -27,10 +27,12 @@ Tabla: Tecnologías en uso
 | Análisis SIG | QGIS + QGIS MCP | 4.2.2 / 0.14.1 | Análisis del punto b y mapa del punto c |
 | Documentación | Python + Markdown + WeasyPrint | 70.0 | Esta bitácora en PDF |
 | Pruebas de navegador | Playwright (Chromium) | 1.63 | Pruebas de flujos y capturas de pantalla |
+| Base espacial | PostGIS (Docker) | 17-3.5 | 47 capas del SIG IGN 250 (ADR-0010) |
+| Carga de capas | GDAL ogr2ogr (Docker) | 3.11.3 | Shapefiles a PostGIS (`scripts/cargar_capas_ign.py`) |
 | Servidor de mapas | GeoServer (Docker) | 2.27.2 | Servicios WMS y WFS de las capas (ADR-0008) |
 | Biblioteca de mapas | OpenLayers | 10.6.1 | Visor web de Administración (ADR-0009) |
+| Estilos de capas | SLD 1.0 (`geoserver/estilos/`) | — | Leyenda con clases (ADR-0011) |
 
 ## Componentes previstos
 
-- **PostGIS** sobre PostgreSQL 17 para las capas del IGN (imagen `postgis/postgis`).
-- Publicar las capas de PostGIS en GeoServer (espacio de trabajo `ign`).
+- Estilos propios para el resto de las capas del IGN.
