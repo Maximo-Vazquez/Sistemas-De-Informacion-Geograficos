@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock, patch
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -39,3 +41,50 @@ class VisorTests(TestCase):
         self.assertEqual(datos["currentUrl"], self.url)
         self.assertTrue(datos["geoserver"]["wmsUrl"].endswith("/wms"))
         self.assertTrue(datos["geoserver"]["wfsUrl"].endswith("/wfs"))
+
+
+INSERTAR = (
+    b'<Transaction xmlns="http://www.opengis.net/wfs" service="WFS" version="1.1.0">'
+    b'<Insert><elementos_relevados xmlns="http://ign"><nombre>Obra</nombre></elementos_relevados></Insert>'
+    b"</Transaction>"
+)
+
+
+class TransaccionVisorTests(TestCase):
+    url = reverse("administracion:visor_transaccion")
+
+    def setUp(self):
+        self.client.force_login(get_user_model().objects.create_user("ana", "ana@example.com"))
+
+    def _post(self, cuerpo):
+        return self.client.post(self.url, cuerpo, content_type="text/xml")
+
+    def test_sin_sesion_redirige_al_login(self):
+        self.client.logout()
+        self.assertEqual(self._post(INSERTAR).status_code, 302)
+
+    def test_get_no_esta_permitido(self):
+        self.assertEqual(self.client.get(self.url).status_code, 405)
+
+    def test_rechaza_borrar_elementos(self):
+        cuerpo = INSERTAR.replace(b"Insert", b"Delete")
+        self.assertEqual(self._post(cuerpo).status_code, 400)
+
+    def test_rechaza_capas_no_editables(self):
+        cuerpo = INSERTAR.replace(b"elementos_relevados", b"red_vial")
+        self.assertEqual(self._post(cuerpo).status_code, 400)
+
+    def test_rechaza_xml_invalido(self):
+        self.assertEqual(self._post(b"<Transaction>").status_code, 400)
+
+    @patch("apps.administracion.services.urllib.request.urlopen")
+    def test_reenvia_la_insercion_a_geoserver_con_credenciales(self, urlopen):
+        respuesta = MagicMock(status=200)
+        respuesta.read.return_value = b"<TransactionResponse/>"
+        respuesta.headers.get_content_type.return_value = "text/xml"
+        urlopen.return_value.__enter__.return_value = respuesta
+        resultado = self._post(INSERTAR)
+        self.assertEqual(resultado.status_code, 200)
+        pedido = urlopen.call_args.args[0]
+        self.assertTrue(pedido.full_url.endswith("/ign/wfs"))
+        self.assertTrue(pedido.get_header("Authorization").startswith("Basic "))

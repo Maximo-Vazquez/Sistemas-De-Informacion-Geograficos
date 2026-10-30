@@ -5,6 +5,7 @@ vacío. Cuando exista PostGIS, cada panel recibe sus filas desde aquí.
 """
 
 from django.conf import settings
+from django.urls import reverse
 
 from .contexto import datos_pagina_admin
 
@@ -63,4 +64,6 @@ def datos_visor(request):
             "wfsUrl": f"{base}/{espacio}/wfs",
         },
         "extension": EXTENSION_CHACO,
+        "capasEditables": settings.GEOSERVER_CAPAS_EDITABLES,
+        "transaccionUrl": reverse("administracion:visor_transaccion"),
     }

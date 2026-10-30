@@ -21,6 +21,11 @@ SITE_ID = 1
 # Servidor de mapas (GeoServer, ADR-0008). El visor lo consume desde el navegador.
 GEOSERVER_URL = env_str("GEOSERVER_URL", "http://localhost:8085/geoserver").rstrip("/")
 GEOSERVER_WORKSPACE = env_str("GEOSERVER_WORKSPACE", "ign")
+# La carga de elementos (WFS-T) pasa por Django: el navegador nunca ve la clave de GeoServer.
+GEOSERVER_ADMIN_USER = env_str("GEOSERVER_ADMIN_USER", "admin")
+GEOSERVER_ADMIN_PASSWORD = env_str("GEOSERVER_ADMIN_PASSWORD", "geoserver")
+# Capas en las que el visor puede insertar elementos nuevos.
+GEOSERVER_CAPAS_EDITABLES = env_list("GEOSERVER_CAPAS_EDITABLES", "elementos_relevados")
 
 INSTALLED_APPS = [
     # Primero: su runserver (migra y compila el frontend) reemplaza al de staticfiles.
