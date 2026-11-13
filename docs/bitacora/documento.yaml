@@ -30,7 +30,7 @@ encabezado:
   - Bitácora técnica
 
 # SemVer: major al cerrar una entrega, minor por contenido nuevo, patch por correcciones.
-version: 0.4.0
+version: 0.8.0
 versiones:
   - version: 0.1.0
     fecha: 2026-10-22
@@ -56,3 +56,30 @@ versiones:
     cambios:
       - GeoServer en Docker como servidor de mapas (ADR-0008)
       - OpenLayers y primera versión del visor (ADR-0009)
+  - version: 0.5.0
+    fecha: 2026-11-12
+    cambios:
+      - Revisión de cumplimiento del apartado a con evidencia de código y servicios locales
+      - Guía de configuración OAuth de Google y aclaración del entorno Docker
+      - Creación del espacio local ign y comprobación de servicios WMS y WFS sin capas
+  - version: 0.6.0
+    fecha: 2026-11-12
+    cambios:
+      - Configuración de credenciales OAuth reales en el entorno local y el contenedor Django
+      - Verificación del inicio OAuth por POST con CSRF y redirección a Google
+  - version: 0.6.1
+    fecha: 2026-11-12
+    cambios:
+      - Corrección del arranque local para servir los archivos estáticos desde Compose
+      - Confirmación del usuario del acceso autenticado al visor y visualización del mapa base
+  - version: 0.7.0
+    fecha: 2026-11-13
+    cambios:
+      - Carga de las 47 capas IGN y sus 570.443 elementos en PostGIS (ADR-0010)
+      - Publicación en GeoServer y verificación individual de WMS, WFS y leyendas
+      - Scripts y documentación para reproducir la importación y la publicación local
+  - version: 0.8.0
+    fecha: 2026-11-13
+    cambios:
+      - Inventario de las 47 capas, sus geometrías, tablas y cantidades
+      - Resumen de los cambios realizados y guía para reproducir la carga en equipo

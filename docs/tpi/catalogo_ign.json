@@ -1,0 +1,242 @@
+{
+  "archivo": "sig_ign.zip",
+  "sha256": "f9e1c4368fae85d58a51fcf074163babb270d5560cb2b3481ef7d370967c0797",
+  "srid": 4326,
+  "capas": [
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Actividades_Agropecuarias.shp",
+      "tabla": "actividades_agropecuarias",
+      "elementos": 21
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Actividades_Economicas.shp",
+      "tabla": "actividades_economicas",
+      "elementos": 4530
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Complejo_de_Energia_Ene.shp",
+      "tabla": "complejo_de_energia_ene",
+      "elementos": 247
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Curso_de_Agua_Hid.shp",
+      "tabla": "curso_de_agua_hid",
+      "elementos": 87419
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Curvas_de_Nivel.shp",
+      "tabla": "curvas_de_nivel",
+      "elementos": 120470
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Edif_Construcciones_Turisticas.shp",
+      "tabla": "edif_construcciones_turisticas",
+      "elementos": 63
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Edif_Depor_y_Esparcimiento.shp",
+      "tabla": "edif_depor_y_esparcimiento",
+      "elementos": 90
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Edif_Educacion.shp",
+      "tabla": "edif_educacion",
+      "elementos": 5260
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Edif_Religiosos.shp",
+      "tabla": "edif_religiosos",
+      "elementos": 855
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Edificio_Publico_IPS.shp",
+      "tabla": "edificio_publico_ips",
+      "elementos": 32
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Edificio_de_Salud_IPS.shp",
+      "tabla": "edificio_de_salud_ips",
+      "elementos": 15
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Edificio_de_Seguridad_IPS.shp",
+      "tabla": "edificio_de_seguridad_ips",
+      "elementos": 1453
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Edificios_Ferroviarios.shp",
+      "tabla": "edificios_ferroviarios",
+      "elementos": 1892
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Ejido.shp",
+      "tabla": "ejido",
+      "elementos": 2258
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Espejo_de_Agua_Hid.shp",
+      "tabla": "espejo_de_agua_hid",
+      "elementos": 26515
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Estructuras_portuarias.shp",
+      "tabla": "estructuras_portuarias",
+      "elementos": 98
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Infraestructura_Aeroportuaria_Punto.shp",
+      "tabla": "infraestructura_aeroportuaria_punto",
+      "elementos": 1079
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Infraestructura_Hidro.shp",
+      "tabla": "infraestructura_hidro",
+      "elementos": 142
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Isla.shp",
+      "tabla": "isla",
+      "elementos": 2866
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Limite_Politico_Administrativo_Lim.shp",
+      "tabla": "limite_politico_administrativo_lim",
+      "elementos": 483
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Localidades.shp",
+      "tabla": "localidades",
+      "elementos": 10804
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Líneas_de_Conducción_Ene.shp",
+      "tabla": "lineas_de_conduccion_ene",
+      "elementos": 41
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Marcas_y_Señales.shp",
+      "tabla": "marcas_y_senales",
+      "elementos": 10090
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Muro_Embalse.shp",
+      "tabla": "muro_embalse",
+      "elementos": 9
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Obra_Portuaria.shp",
+      "tabla": "obra_portuaria",
+      "elementos": 17
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Obra_de_Comunicación.shp",
+      "tabla": "obra_de_comunicacion",
+      "elementos": 513
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Otras_Edificaciones.shp",
+      "tabla": "otras_edificaciones",
+      "elementos": 96056
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Pais_Lim.shp",
+      "tabla": "pais_lim",
+      "elementos": 541
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Provincias.shp",
+      "tabla": "provincias",
+      "elementos": 25
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Puente_Red_Vial_Puntos.shp",
+      "tabla": "puente_red_vial_puntos",
+      "elementos": 3852
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Puntos_de_Alturas_Topograficas.shp",
+      "tabla": "puntos_de_alturas_topograficas",
+      "elementos": 4323
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Puntos_del_Terreno.shp",
+      "tabla": "puntos_del_terreno",
+      "elementos": 8644
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Red_Vial.shp",
+      "tabla": "red_vial",
+      "elementos": 118955
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Red_ferroviaria.shp",
+      "tabla": "red_ferroviaria",
+      "elementos": 968
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Salvado_de_Obstaculo.shp",
+      "tabla": "salvado_de_obstaculo",
+      "elementos": 1550
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Señalizaciones.shp",
+      "tabla": "senalizaciones",
+      "elementos": 142
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Sue_Costero.shp",
+      "tabla": "sue_costero",
+      "elementos": 1033
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Sue_Hidromorfologico.shp",
+      "tabla": "sue_hidromorfologico",
+      "elementos": 3208
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Sue_No_Consolidado.shp",
+      "tabla": "sue_no_consolidado",
+      "elementos": 12276
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Sue_congelado.shp",
+      "tabla": "sue_congelado",
+      "elementos": 334
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Sue_consolidado.shp",
+      "tabla": "sue_consolidado",
+      "elementos": 2611
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Veg_Arborea.shp",
+      "tabla": "veg_arborea",
+      "elementos": 6730
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Veg_Arbustiva.shp",
+      "tabla": "veg_arbustiva",
+      "elementos": 358
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Veg_Cultivos.shp",
+      "tabla": "veg_cultivos",
+      "elementos": 3463
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Veg_Suelo_Desnudo.shp",
+      "tabla": "veg_suelo_desnudo",
+      "elementos": 14
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/Vias_Secundarias.shp",
+      "tabla": "vias_secundarias",
+      "elementos": 22353
+    },
+    {
+      "archivo": "sig_ign/SIG_IGN2011/veg_Hidrofila.shp",
+      "tabla": "veg_hidrofila",
+      "elementos": 5745
+    }
+  ]
+}

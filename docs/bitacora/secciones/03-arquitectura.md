@@ -2,7 +2,9 @@
 
 ## Vista general
 
-Django sirve las páginas y monta pantallas React compiladas con Vite (no es una SPA). PostgreSQL guarda los datos de la aplicación y, en la etapa GIS, las capas con PostGIS. Un servidor de mapas publicará esas capas por WMS/WFS y el visor web las consumirá. En producción, un pod de Kubernetes corre Django (Gunicorn) junto a nginx, que sirve los estáticos.
+Django sirve las páginas y monta pantallas React compiladas con Vite (no es una SPA). PostgreSQL guarda los datos de la aplicación y un servicio PostGIS separado guarda las capas IGN. GeoServer las publica por WMS/WFS y el visor web las consume. En producción, un pod de Kubernetes corre Django (Gunicorn) junto a nginx, que sirve los estáticos.
+
+En desarrollo local también se puede ejecutar `docker compose up -d --build web geoserver`. El servicio opcional `web` usa `runserver` para servir las páginas y los estáticos compilados de la imagen, y recibe el entorno desde `.env`. Gunicorn conserva su uso de producción con nginx.
 
 ## Stack actual
 
@@ -12,7 +14,8 @@ Tabla: Tecnologías en uso
 |---|---|---|---|
 | Backend | Django | 5.2.18 | Aplicación web, vistas y administración |
 | Autenticación | django-allauth (Google) | 65.20.1 | Login con Google, sin contraseñas |
-| Base de datos | PostgreSQL | 17 | Datos de la aplicación; PostGIS en la etapa GIS |
+| Base de datos | PostgreSQL | 17 | Cuentas, sesiones y datos de Django |
+| Base espacial | PostGIS sobre PostgreSQL | 3.5.2 / 17 | Capas IGN en el esquema `ign` (ADR-0010) |
 | Driver | psycopg | 3.3.6 | Conexión Django–PostgreSQL |
 | Servidor WSGI | Gunicorn | 26.2.0 | Producción |
 | Frontend | React + TypeScript | 19.3 / 7.0 | Pantallas montadas por Django |
@@ -32,5 +35,5 @@ Tabla: Tecnologías en uso
 
 ## Componentes previstos
 
-- **PostGIS** sobre PostgreSQL 17 para las capas del IGN (imagen `postgis/postgis`).
-- Publicar las capas de PostGIS en GeoServer (espacio de trabajo `ign`).
+- Conexión de Django a PostGIS para los cálculos del panel y herramientas de consulta, medición y edición del visor.
+- Provisionar PostGIS y GeoServer para el despliegue en el VPS.

@@ -17,13 +17,18 @@
 | **Proyecto** | Visor SIG Chaco |
 | **Lugar de realización** | Universidad Tecnológica Nacional – Facultad Regional Resistencia<br>French 414, Resistencia, Chaco, Argentina. |
 | **Nombre del documento** | Bitácora técnica – Visor SIG Chaco |
-| **Versión/Edición** | 0.4.0 |
-| **Fecha de versión** | 29/10/2026 |
+| **Versión/Edición** | 0.8.0 |
+| **Fecha de versión** | 13/11/2026 |
 
 ## Control de versiones
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.8.0 | 13/11/2026 | Inventario de las 47 capas, sus geometrías, tablas y cantidades; Resumen de los cambios realizados y guía para reproducir la carga en equipo |
+| 0.7.0 | 13/11/2026 | Carga de las 47 capas IGN y sus 570.443 elementos en PostGIS (ADR-0010); Publicación en GeoServer y verificación individual de WMS, WFS y leyendas; Scripts y documentación para reproducir la importación y la publicación local |
+| 0.6.1 | 12/11/2026 | Corrección del arranque local para servir los archivos estáticos desde Compose; Confirmación del usuario del acceso autenticado al visor y visualización del mapa base |
+| 0.6.0 | 12/11/2026 | Configuración de credenciales OAuth reales en el entorno local y el contenedor Django; Verificación del inicio OAuth por POST con CSRF y redirección a Google |
+| 0.5.0 | 12/11/2026 | Revisión de cumplimiento del apartado a con evidencia de código y servicios locales; Guía de configuración OAuth de Google y aclaración del entorno Docker; Creación del espacio local ign y comprobación de servicios WMS y WFS sin capas |
 | 0.4.0 | 29/10/2026 | GeoServer en Docker como servidor de mapas (ADR-0008); OpenLayers y primera versión del visor (ADR-0009) |
 | 0.3.0 | 22/10/2026 | Pruebas de navegador con Playwright y capturas reproducibles; ADR-0007 |
 | 0.2.0 | 22/10/2026 | Acceso a Administración para cualquier cuenta de Google; Base local gis_tpi y runserver que compila el frontend; Dependencias unificadas en requirements.txt y logo de la UTN; Globo 3D en la pantalla de inicio; Logo del equipo y botón estándar de Google |
@@ -80,7 +85,9 @@ La cátedra pide, en grupos de 4 a 5 integrantes y con las capas del SIG IGN 250
 
 ## 3.1 Vista general
 
-Django sirve las páginas y monta pantallas React compiladas con Vite (no es una SPA). PostgreSQL guarda los datos de la aplicación y, en la etapa GIS, las capas con PostGIS. Un servidor de mapas publicará esas capas por WMS/WFS y el visor web las consumirá. En producción, un pod de Kubernetes corre Django (Gunicorn) junto a nginx, que sirve los estáticos.
+Django sirve las páginas y monta pantallas React compiladas con Vite (no es una SPA). PostgreSQL guarda los datos de la aplicación y un servicio PostGIS separado guarda las capas IGN. GeoServer las publica por WMS/WFS y el visor web las consume. En producción, un pod de Kubernetes corre Django (Gunicorn) junto a nginx, que sirve los estáticos.
+
+En desarrollo local también se puede ejecutar `docker compose up -d --build web geoserver`. El servicio opcional `web` usa `runserver` para servir las páginas y los estáticos compilados de la imagen, y recibe el entorno desde `.env`. Gunicorn conserva su uso de producción con nginx.
 
 ## 3.2 Stack actual
 
@@ -90,7 +97,8 @@ Tabla: Tecnologías en uso
 |---|---|---|---|
 | Backend | Django | 5.2.18 | Aplicación web, vistas y administración |
 | Autenticación | django-allauth (Google) | 65.20.1 | Login con Google, sin contraseñas |
-| Base de datos | PostgreSQL | 17 | Datos de la aplicación; PostGIS en la etapa GIS |
+| Base de datos | PostgreSQL | 17 | Cuentas, sesiones y datos de Django |
+| Base espacial | PostGIS sobre PostgreSQL | 3.5.2 / 17 | Capas IGN en el esquema `ign` (ADR-0010) |
 | Driver | psycopg | 3.3.6 | Conexión Django–PostgreSQL |
 | Servidor WSGI | Gunicorn | 26.2.0 | Producción |
 | Frontend | React + TypeScript | 19.3 / 7.0 | Pantallas montadas por Django |
@@ -110,8 +118,8 @@ Tabla: Tecnologías en uso
 
 ## 3.3 Componentes previstos
 
-- **PostGIS** sobre PostgreSQL 17 para las capas del IGN (imagen `postgis/postgis`).
-- Publicar las capas de PostGIS en GeoServer (espacio de trabajo `ign`).
+- Conexión de Django a PostGIS para los cálculos del panel y herramientas de consulta, medición y edición del visor.
+- Provisionar PostGIS y GeoServer para el despliegue en el VPS.
 
 # 4 Estado de las consignas del TPI
 
@@ -121,8 +129,8 @@ Tabla: Estado de las consignas del TPI
 
 | Consigna | Descripción | Estado | Referencia |
 |---|---|---|---|
-| a.1 | Servidor de bases de datos espaciales con las capas vectoriales del SIG IGN 250 | Pendiente | ADR-0003 |
-| a.2 | Servidor de mapas con servicios OGC (WMS y WFS) | En curso | ADR-0008 |
+| a.1 | Servidor de bases de datos espaciales con las capas vectoriales del SIG IGN 250 | Completa | ADR-0003, ADR-0010 |
+| a.2 | Servidor de mapas con servicios OGC (WMS y WFS) | Completa | ADR-0008 |
 | a.3 | Aplicación web de visualización (navegación, capas, leyenda, escala, consultas, medición y edición) | En curso | ADR-0001, ADR-0002, ADR-0009 |
 | b | Análisis de la RN 11 en el Chaco (km, población a 10 y 20 km, puentes) e informe | Pendiente | ADR-0006 |
 | c | Mapa A4 en PDF con la traza, áreas de influencia, puentes y accidentes naturales | Pendiente | ADR-0006 |
@@ -144,6 +152,7 @@ Tabla: Resumen de decisiones
 | ADR-0007 | Playwright para pruebas de navegador y capturas de pantalla | aceptada | 22/10/2026 |
 | ADR-0008 | GeoServer como servidor de mapas WMS/WFS | aceptada | 29/10/2026 |
 | ADR-0009 | OpenLayers como biblioteca de mapas del visor | aceptada | 29/10/2026 |
+| ADR-0010 | PostGIS dedicado para las capas IGN en desarrollo | aceptada | 13/11/2026 |
 
 ## 5.1 ADR-0001 — Django con allauth y login de Google estándar
 
@@ -370,6 +379,34 @@ OpenLayers 10.6.1 en el frontend React (`frontend/src/features/admin-visor/`). R
 - Primera versión: fondo Argenmap del IGN (público, sin clave), vista inicial en el Chaco, zoom, escala, lista de capas leída del `GetCapabilities` con interruptores y leyenda por capa.
 - Pendiente: consulta por punto y rectángulo, medición y carga de elementos.
 
+## 5.10 ADR-0010 — PostGIS dedicado para las capas IGN en desarrollo
+
+*Estado: aceptada · Fecha: 13/11/2026*
+
+### Contexto
+
+El proyecto ya tiene una base PostgreSQL con cuentas y sesiones de Django. También se encontró una instalación de laboratorio con cinco capas y una configuración de GeoServer independientes. El ZIP entregado para el TPI contiene 47 shapefiles nacionales en WGS 84; sus geometrías deben almacenarse en PostGIS y publicarse por WMS y WFS.
+
+### Opciones consideradas
+
+- Sustituir la imagen de la base de Django por PostGIS y reutilizar su volumen existente.
+- Usar directamente la base y el GeoServer del laboratorio anterior.
+- Crear un servicio PostGIS propio para las capas del proyecto y conectarlo a GeoServer, conservando las bases existentes.
+
+### Decisión
+
+Agregar el servicio `gisdb` con `postgis/postgis:17-3.5` y el volumen `datos_gis`. Django sigue usando `db` para sus cuentas; GeoServer usa la red de Compose para conectarse a `gisdb`. Se cargan las capas completas del ZIP en el esquema `ign`, con SRID 4326, mediante GDAL. Un almacén nuevo `sig_ign2011` las publica en el espacio `ign` sin alterar los almacenes previos.
+
+Los scripts de importación y publicación documentan el procedimiento. La importación verifica los conteos de cada tabla respecto del ZIP y registra el hash y el catálogo de origen. Los nombres de capas que coinciden con otras publicaciones reciben el prefijo `sig2011_` para evitar colisiones.
+
+### Consecuencias
+
+- Las cuentas de Django y las capas del IGN tienen volúmenes independientes. La imagen contiene el software; los datos cargados persisten en `datos_gis`.
+- El GeoServer local depende de que `gisdb` esté saludable. La publicación anterior del laboratorio conserva su conexión y sus datos originales.
+- Las capas mantienen coordenadas geográficas EPSG:4326. Los cálculos métricos y buffers del TPI deben usar un CRS proyectado apropiado.
+- Django todavía no tiene una conexión GeoDjango al nuevo PostGIS ni cálculos para el panel. Estos trabajos continúan pendientes.
+- La etiqueta de la imagen PostGIS utilizada es `linux/amd64`; en este equipo ARM se ejecuta mediante la emulación de Docker Desktop.
+
 # 6 Bitácora de trabajo
 
 Registro cronológico de las sesiones de trabajo.
@@ -523,6 +560,152 @@ Elegir el servidor de mapas y la biblioteca de mapas del visor, levantar el serv
 - Visor: consulta por punto y rectángulo, medición de distancias y carga de elementos (WFS-T).
 - Desplegar GeoServer en el VPS.
 
+## 6.6 12/11/2026 — Configuración local de las credenciales de Google
+
+*Asistencia técnica del proyecto*
+
+### Objetivo
+
+Aplicar el cliente OAuth proporcionado por el usuario para habilitar el acceso con Google en la aplicación local.
+
+### Trabajo realizado
+
+- Se leyó el JSON indicado por el usuario fuera del repositorio. Se validó que fuera un cliente web con ID, secreto y ambos callbacks locales autorizados.
+- Se actualizaron únicamente las variables de Google en el `.env` local, ignorado por Git, sin imprimir sus valores. El JSON original no se copió al repositorio.
+- Se comprobó que el contenedor Django no tenía variables OAuth que anularan el archivo. Se copió el `.env` a `/app/.env`, con propietario `app` y permisos `600`, y se reinició `visor-sig-web`. Las variables existentes del contenedor conservan prioridad, incluido `DB_HOST=db`.
+- `manage.py check` finalizó sin problemas.
+- Se probó el flujo HTTP real: GET del formulario, cookie CSRF y POST de inicio de Google con destino al visor. La respuesta fue HTTP 302 hacia Google, con el cliente correcto y `http://localhost:8000/accounts/google/login/callback/` como retorno.
+- Se actualizaron la revisión del proyecto, los pendientes y la bitácora.
+
+### Problemas y soluciones
+
+- El archivo `.env` en Windows no era accesible desde el contenedor existente, que no tiene montajes. Se aplicó también dentro del contenedor sin modificar la imagen ni incluir secretos en archivos versionados.
+- La verificación solo comprueba el inicio del flujo. No suplanta el ingreso del usuario a Google ni demuestra todavía el intercambio del código por una sesión autenticada.
+
+### Pendientes
+
+- Abrir `http://localhost:8000/administracion/visor/`, iniciar sesión con Google y comprobar el regreso al visor.
+- Si se recrea el contenedor, pasar nuevamente las variables mediante `--env-file .env` o un mecanismo de secretos.
+- Cargar y publicar las capas del IGN; el login no modifica el catálogo vacío de GeoServer.
+
+## 6.7 12/11/2026 — Corrección de estáticos y confirmación del visor local
+
+*Asistencia técnica del proyecto*
+
+### Objetivo
+
+Resolver la pantalla vacía del inicio y del login, y comprobar el acceso al visor.
+
+### Trabajo realizado
+
+- Se identificó que Gunicorn entregaba el HTML, pero los archivos JavaScript, CSS y el logo devolvían HTTP 404. Los assets sí existían en la imagen.
+- Se agregó el servicio opcional `web` al Compose de desarrollo. Usa la imagen de la aplicación, `env_file: .env`, `DB_HOST=db`, `config.settings.local` y `runserver --noreload --skip-frontend-build` en el puerto local 8000. La imagen ya contiene el frontend compilado.
+- Se conservó detenido el contenedor manual anterior y se inició el servicio de Compose. PostgreSQL y sus volúmenes no se modificaron.
+- Se verificaron inicio, login y confirmación de Google: HTTP 200 y sus siete assets referenciados con HTTP 200 en cada página. El POST OAuth con CSRF continuó respondiendo 302 hacia Google con el cliente y callback correctos. `manage.py check` pasó.
+- El usuario confirmó mediante capturas el acceso autenticado al visor y la visualización del fondo Argenmap. La lista de capas continúa vacía.
+- Se localizaron cinco shapefiles en `D:/GIS/labhoy/shapes`: red vial, espejos de agua y tres clases de vegetación. No se comprobó su procedencia o correspondencia con el paquete SIG IGN 250 de la consigna; no se importaron ni publicaron.
+- Se actualizaron README, arquitectura, revisión, pendientes y bitácora.
+
+### Problemas y soluciones
+
+- El HTTP 200 de una página no asegura que una pantalla React pueda renderizarse. Se verificaron también sus recursos estáticos.
+- El intento de capturar el DOM con Edge en modo headless no produjo una salida utilizable. La confirmación visual posterior fue aportada por el usuario.
+
+### Pendientes
+
+- Identificar el paquete SIG IGN 250 correcto, cargar las capas en PostGIS y publicarlas en el espacio `ign` de GeoServer.
+- Completar las herramientas pendientes del visor.
+
+## 6.8 12/11/2026 — Revisión de cumplimiento y preparación del acceso con Google
+
+*Asistencia técnica del proyecto*
+
+### Objetivo
+
+Contrastar el proyecto con el apartado a de la consigna y preparar la configuración local de acceso al visor.
+
+### Trabajo realizado
+
+- Se revisaron README, settings, autenticación, vistas, componentes del visor, Docker y estado del TPI. El informe detallado está en `docs/revision-2026-11-12.md`.
+- Se comprobó que PostgreSQL no tiene PostGIS ni capas del IGN y que GeoServer no tenía espacios ni capas. Se creó el espacio `ign` que espera el visor.
+- WMS 1.3.0 y WFS 2.0.0 respondieron HTTP 200 con capacidades válidas y CORS. El catálogo sigue vacío; a.2 continúa en curso.
+- Se creó un `.env` local ignorado por Git con una clave Django aleatoria. No se inventaron credenciales de Google; el usuario confirmó que aún no creó un cliente OAuth.
+- Se agregó al README la guía de Google, el tipo de cliente web, los callbacks y la diferencia entre el entorno del host y el del contenedor.
+- Se instalaron las dependencias del frontend. La compilación, incluida la comprobación TypeScript, y el chequeo de colores finalizaron correctamente.
+- En la imagen existente del contenedor Django pasaron `manage.py check`, los 13 tests y Ruff. Inicio y login respondieron HTTP 200; el visor sin sesión redirigió al login.
+
+### Problemas y soluciones
+
+- Las herramientas Python y Node estaban instaladas fuera del PATH de esta sesión. Se localizó Node y se usó Corepack para instalar el frontend respetando el lockfile.
+- La instalación nativa de Python ARM intentó compilar `cryptography` y terminó sin una distribución compatible de `psycopg-binary==3.3.6`. El entorno virtual quedó sin completar. La verificación del backend se realizó en el contenedor existente, que ya dispone de las dependencias.
+- El contenedor de Django no monta el código local ni contiene `.env` o variables OAuth. Configurar el archivo en Windows no basta para activar el login en ese contenedor.
+- La barra de escala y la URL WFS no constituyen herramientas de medición o edición. Esas funciones continúan pendientes.
+
+### Pendientes
+
+- Crear o reutilizar el cliente OAuth, cargar sus credenciales reales en Django y verificar un login completo. No se realizó una prueba visual autenticada del visor.
+- Habilitar PostGIS, cargar las capas IGN, publicarlas y probar interruptores y leyendas con datos reales.
+- Implementar consultas por punto y rectángulo, medición y alta de elementos.
+- Mantener a.1 pendiente y a.2 y a.3 en curso; revisar también los estados desactualizados del inicio.
+
+## 6.9 13/11/2026 — Carga y publicación de las capas IGN
+
+*Asistencia técnica del proyecto · Decisiones: ADR-0010*
+
+### Objetivo
+
+Comprobar las bases y servicios existentes, ejecutar la aplicación según el README y cargar el ZIP IGN indicado por el usuario.
+
+### Trabajo realizado
+
+- Se inició la aplicación con `docker compose up -d web geoserver`; PostgreSQL, PostGIS y GeoServer quedaron saludables. La base `db` contiene 17 tablas de Django y no tiene PostGIS; el servicio `gisdb` tiene PostGIS 3.5.2 y su propio volumen.
+- Se inspeccionó `D:/TPI/sig_ign.zip`: 47 shapefiles con sus componentes y WGS 84; la carpeta interna se llama `SIG_IGN2011`. El archivo comprimido pesa aproximadamente 236,6 MiB.
+- Se cargaron las 47 capas en el esquema `ign` del PostGIS del proyecto usando GDAL. Se verificó la cantidad por tabla frente al DBF de origen: 570.443 elementos en total. Las 47 geometrías usan SRID 4326. El catálogo de archivos, conteos y SHA-256 quedó en `docs/tpi/catalogo_ign.json`.
+- Se creó el almacén `sig_ign2011` y se publicaron las 47 capas en el espacio `ign` de GeoServer. Se conservaron el almacén del laboratorio y sus cinco capas previas; los nombres nacionales que colisionaban llevan el prefijo `sig2011_`.
+- Se comprobaron las 47 capas por WFS (`GetFeature` con conteos iguales al ZIP), WMS (`GetMap` PNG) y `GetLegendGraphic` PNG. Se verificó CORS para el origen local. También se solicitaron geometrías de provincias, localidades, puentes, rutas, espejos de agua y vegetación, y un mapa combinado de las cinco primeras.
+- Se documentaron los servicios, el arranque, la importación y la publicación; se agregó la dependencia de GeoServer a `gisdb` y la decisión ADR-0010.
+- Pasaron los 13 tests de Django, Ruff, la comprobación TypeScript, la compilación Vite, el control de colores, `manage.py check` y `docker compose config --quiet`.
+
+### Problemas y soluciones
+
+- La presencia de una imagen PostGIS no implicaba datos cargados: el nuevo volumen estaba vacío y la base de Django solo contenía tablas de la aplicación. Se usó un volumen propio para las capas sin sustituir los datos existentes.
+- La instalación anterior guardaba cinco capas en un PostGIS de laboratorio. Se agregó un almacén nuevo para el ZIP completo; sus nombres en conflicto se diferenciaron sin alterar la conexión anterior.
+- El nombre comunicado del paquete mencionaba 2021, pero la carpeta interna del archivo suministrado indica `SIG_IGN2011`. Se conserva esa identificación, sin afirmar una fecha de actualización distinta.
+
+### Pendientes
+
+- Implementar consultas por punto y rectángulo, medición de distancias y carga de geometrías y atributos en el visor.
+- Conectar Django al PostGIS para calcular los indicadores del panel y completar el análisis de la RN 11.
+- Provisionar PostGIS y GeoServer en el VPS e identificar las credenciales y conexiones de ese entorno.
+
+## 6.10 13/11/2026 — Documentación para compartir la carga IGN
+
+*Asistencia técnica del proyecto*
+
+### Objetivo
+
+Preparar una explicación de los cambios, las capas cargadas y su reproducción para el equipo.
+
+### Trabajo realizado
+
+- Se creó la rama de trabajo `feature/postgis-capas-ign` a partir de `develop`.
+- Se agregó el inventario de 47 capas a las fuentes de la bitácora, con sus nombres, familias de geometría, tablas y cantidades. Los datos provienen del catálogo generado y de las cabeceras de los shapefiles del ZIP usado en la carga.
+- Se documentaron los servicios Docker, los scripts de importación y publicación, los cinco nombres diferenciados por colisión y los pasos para reproducir la instalación.
+- Se aclaró qué archivos y datos quedan fuera de Git, qué verificaciones se hicieron y qué funcionalidades siguen pendientes.
+- Se vinculó el inventario desde el README y se actualizó la versión de esta bitácora.
+- Se verificó que las 47 filas del inventario y su suma coinciden con el catálogo, y que los archivos modificados no contienen los valores locales de las credenciales. Pasaron los 13 tests de Django, Ruff, TypeScript, la compilación del frontend, el control de colores y la validación de Docker Compose.
+
+### Problemas y soluciones
+
+- Los nombres publicados para cinco capas dependen de que existan o no capas antiguas con el mismo nombre. La documentación distingue el resultado local de una instalación nueva.
+- Los volúmenes Docker y las credenciales locales no viajan con el repositorio. La documentación indica que cada integrante necesita el ZIP y su configuración local.
+- La generación del PDF dentro de la imagen de la aplicación falló porque falta la biblioteca del sistema `libgobject-2.0`. Se generó y verificó la versión Markdown de la bitácora, que sí se comparte en el repositorio.
+
+### Pendientes
+
+- Revisar la documentación con el equipo y ejecutar la carga en las demás computadoras según sea necesario.
+- Completar las funcionalidades y los análisis SIG pendientes indicados en esta bitácora.
+
 # 7 Riesgos y pendientes
 
 ## 7.1 Riesgos
@@ -531,7 +714,7 @@ Tabla: Riesgos identificados
 
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
-| Fecha de entrega (01/12/2026) con PostGIS, servidor de mapas y visor sin empezar | Alto | Priorizar la carga de capas y el servidor OGC antes que funciones extra del visor |
+| Fecha de entrega (01/12/2026 al 03/12/2026) con visor y análisis incompletos | Alto | Priorizar consultas, medición, alta de elementos y análisis de la ruta |
 | Cálculo de distancias y áreas en coordenadas geográficas | Alto | Reproyectar a un CRS métrico (POSGAR 2007, faja correspondiente) antes de medir y de generar buffers |
 | Categorías de población excluyentes (0–10 km y 10–20 km) mal calculadas | Medio | Usar anillos (buffer 20 km menos buffer 10 km) y documentar el criterio de asignación de localidades |
 | Credenciales de Google y del VPS | Medio | Solo en secrets de GitHub y `.env` local; nunca en el repositorio |
@@ -540,11 +723,13 @@ Tabla: Riesgos identificados
 ## 7.2 Pendientes
 
 - [PENDIENTE] Completar los integrantes del grupo en `docs/bitacora/documento.yaml`.
+- El usuario confirmó el acceso autenticado al visor con Google y la visualización del mapa base. El servicio local `web` de Compose recibe las credenciales mediante `env_file: .env`; tras cambiar ese archivo, recrear el servicio.
 - [PENDIENTE] Cargar los secrets del deploy (`DJANGO_SECRET_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) y registrar la URI de redirección del dominio en Google.
-- [PENDIENTE] Instalar la extensión PostGIS en el PostgreSQL local.
+- Las 47 capas del ZIP IGN están cargadas en el PostGIS local `gisdb` y publicadas por WMS/WFS. Los volúmenes locales no se distribuyen con el repositorio; una instalación nueva requiere el ZIP y la importación documentada en el README.
 - [PENDIENTE] Definir el dominio de despliegue (nginx y `CSRF_TRUSTED_ORIGINS`).
-- [PENDIENTE] Publicar las capas del IGN en GeoServer (espacio de trabajo `ign`) una vez cargadas en PostGIS.
+- [PENDIENTE] Conectar Django al PostGIS del proyecto para alimentar el panel y realizar los cálculos geográficos.
 - [PENDIENTE] Desplegar GeoServer en el VPS (manifiesto k8s) y definir su URL pública.
+- [PENDIENTE] Completar consultas por punto y rectángulo, medición de distancias y alta de geometría con atributos; verificar interruptores y leyendas con capas reales.
 
 # 8 Glosario
 
@@ -561,3 +746,115 @@ Tabla: Términos usados en el documento
 | WFS | *Web Feature Service*: publica entidades vectoriales con geometría y atributos |
 | WMS | *Web Map Service*: publica mapas como imágenes |
 | RN 11 | Ruta Nacional 11, objeto del análisis del punto b |
+
+# 9 Carga y publicación de las capas IGN
+
+Este apartado describe los cambios para que el equipo pueda revisarlos y repetir la carga. Los resultados corresponden a la instalación local comprobada el 13/11/2026.
+
+## 9.1 Qué se agregó y cambió
+
+- **`docker-compose.yml`:** servicio `web` para ejecutar Django y servir sus archivos estáticos en desarrollo; servicio `gisdb` con PostgreSQL 17 y PostGIS 3.5; volumen persistente `datos_gis`. GeoServer espera a que PostGIS esté disponible.
+- **`.env.example`:** variables `GIS_DB_NAME`, `GIS_DB_USER`, `GIS_DB_PASSWORD` y `GIS_DB_PORT`. El `.env` real con credenciales se mantiene fuera de Git.
+- **`scripts/importar_ign.py`:** abre los shapefiles dentro del ZIP con GDAL, los carga en el esquema `ign` de PostGIS y compara la cantidad de elementos de cada tabla con el archivo de origen. No sobrescribe tablas existentes y genera `docs/tpi/catalogo_ign.json` con los nombres, conteos y SHA-256 del ZIP.
+- **`scripts/publicar_ign.py`:** conecta GeoServer a la base `gisdb` y publica el catálogo en el espacio `ign`. Obtiene las credenciales desde el entorno de los contenedores. Si ya existe una capa de otro almacén con el mismo nombre, usa el prefijo `sig2011_` para evitar la colisión.
+- **`README.md`:** pasos de arranque con Docker, configuración de Google, carga de capas y publicación. También se actualizó la arquitectura, el estado de las consignas y la decisión ADR-0010 de esta bitácora.
+- **Documentación de la revisión:** `docs/revision-2026-11-12.md` registra el diagnóstico del proyecto y su actualización posterior a la carga.
+
+## 9.2 Origen y resultado
+
+El archivo local usado fue `D:/TPI/sig_ign.zip`, con 47 shapefiles y sus componentes. El directorio interno se llama `SIG_IGN2011`: ese nombre identifica el contenido comprobado y no permite afirmar que el paquete sea una edición de 2021.
+
+| Dato | Resultado local |
+|---|---|
+| Capa y escala indicadas | SIG IGN 250 |
+| Cantidad de capas | 47 |
+| Elementos cargados | 570.443 |
+| Sistema de referencia | WGS 84, EPSG:4326 |
+| Base y esquema | `visor_ign`, esquema `ign` |
+| GeoServer | Puerto 8085; espacio `ign`; almacén `sig_ign2011` |
+| SHA-256 del ZIP | `f9e1c4368fae85d58a51fcf074163babb270d5560cb2b3481ef7d370967c0797` |
+
+La base `db` contiene las cuentas y sesiones de Django; la base `gisdb` contiene las capas. La imagen Docker aporta el software de base de datos: los datos importados y la configuración de GeoServer viven en volúmenes locales, que no se comparten al subir el código a Git.
+
+## 9.3 Inventario de las 47 capas
+
+La cantidad corresponde a los elementos del shapefile y a los contados en PostGIS durante la carga. La geometría indica su familia general; GDAL puede almacenarla como geometría múltiple.
+
+Tabla: Capas importadas desde el ZIP IGN
+
+| Capa del ZIP | Geometría | Tabla PostGIS | Elementos |
+|---|---|---|---:|
+| Actividades_Agropecuarias | Punto | `actividades_agropecuarias` | 21 |
+| Actividades_Economicas | Punto | `actividades_economicas` | 4.530 |
+| Complejo_de_Energia_Ene | Punto | `complejo_de_energia_ene` | 247 |
+| Curso_de_Agua_Hid | Línea | `curso_de_agua_hid` | 87.419 |
+| Curvas_de_Nivel | Línea | `curvas_de_nivel` | 120.470 |
+| Edif_Construcciones_Turisticas | Punto | `edif_construcciones_turisticas` | 63 |
+| Edif_Depor_y_Esparcimiento | Punto | `edif_depor_y_esparcimiento` | 90 |
+| Edif_Educacion | Punto | `edif_educacion` | 5.260 |
+| Edif_Religiosos | Punto | `edif_religiosos` | 855 |
+| Edificio_Publico_IPS | Punto | `edificio_publico_ips` | 32 |
+| Edificio_de_Salud_IPS | Punto | `edificio_de_salud_ips` | 15 |
+| Edificio_de_Seguridad_IPS | Punto | `edificio_de_seguridad_ips` | 1.453 |
+| Edificios_Ferroviarios | Punto | `edificios_ferroviarios` | 1.892 |
+| Ejido | Polígono | `ejido` | 2.258 |
+| Espejo_de_Agua_Hid | Polígono | `espejo_de_agua_hid` | 26.515 |
+| Estructuras_portuarias | Punto | `estructuras_portuarias` | 98 |
+| Infraestructura_Aeroportuaria_Punto | Punto | `infraestructura_aeroportuaria_punto` | 1.079 |
+| Infraestructura_Hidro | Punto | `infraestructura_hidro` | 142 |
+| Isla | Polígono | `isla` | 2.866 |
+| Limite_Politico_Administrativo_Lim | Línea | `limite_politico_administrativo_lim` | 483 |
+| Localidades | Punto | `localidades` | 10.804 |
+| Líneas_de_Conducción_Ene | Línea | `lineas_de_conduccion_ene` | 41 |
+| Marcas_y_Señales | Punto | `marcas_y_senales` | 10.090 |
+| Muro_Embalse | Línea | `muro_embalse` | 9 |
+| Obra_Portuaria | Punto | `obra_portuaria` | 17 |
+| Obra_de_Comunicación | Punto | `obra_de_comunicacion` | 513 |
+| Otras_Edificaciones | Punto | `otras_edificaciones` | 96.056 |
+| Pais_Lim | Polígono | `pais_lim` | 541 |
+| Provincias | Polígono | `provincias` | 25 |
+| Puente_Red_Vial_Puntos | Punto | `puente_red_vial_puntos` | 3.852 |
+| Puntos_de_Alturas_Topograficas | Punto | `puntos_de_alturas_topograficas` | 4.323 |
+| Puntos_del_Terreno | Punto | `puntos_del_terreno` | 8.644 |
+| Red_Vial | Línea | `red_vial` | 118.955 |
+| Red_ferroviaria | Línea | `red_ferroviaria` | 968 |
+| Salvado_de_Obstaculo | Punto | `salvado_de_obstaculo` | 1.550 |
+| Señalizaciones | Punto | `senalizaciones` | 142 |
+| Sue_Costero | Polígono | `sue_costero` | 1.033 |
+| Sue_Hidromorfologico | Polígono | `sue_hidromorfologico` | 3.208 |
+| Sue_No_Consolidado | Polígono | `sue_no_consolidado` | 12.276 |
+| Sue_congelado | Polígono | `sue_congelado` | 334 |
+| Sue_consolidado | Polígono | `sue_consolidado` | 2.611 |
+| Veg_Arborea | Polígono | `veg_arborea` | 6.730 |
+| Veg_Arbustiva | Polígono | `veg_arbustiva` | 358 |
+| Veg_Cultivos | Polígono | `veg_cultivos` | 3.463 |
+| Veg_Suelo_Desnudo | Polígono | `veg_suelo_desnudo` | 14 |
+| Vias_Secundarias | Línea | `vias_secundarias` | 22.353 |
+| veg_Hidrofila | Polígono | `veg_hidrofila` | 5.745 |
+
+En la instalación comprobada existían cinco capas anteriores del laboratorio en otro almacén. Para conservarlas, las siguientes capas nacionales se publicaron con un nombre diferente:
+
+| Tabla PostGIS | Capa WMS/WFS publicada en esta instalación |
+|---|---|
+| `espejo_de_agua_hid` | `ign:sig2011_espejo_de_agua_hid` |
+| `red_vial` | `ign:sig2011_red_vial` |
+| `veg_arborea` | `ign:sig2011_veg_arborea` |
+| `veg_cultivos` | `ign:sig2011_veg_cultivos` |
+| `veg_hidrofila` | `ign:sig2011_veg_hidrofila` |
+
+Las demás capas se publicaron con `ign:` seguido del nombre de la tabla. En una instalación sin esas capas previas, los cinco nombres pueden publicarse sin el prefijo `sig2011_`.
+
+## 9.4 Cómo volver a levantarlo
+
+1. Preparar `.env` a partir de `.env.example` y configurar un cliente OAuth de Google válido, como explica el README.
+2. Desde la carpeta del proyecto, ejecutar `docker compose up -d --build web geoserver`. Esto inicia también `db` y `gisdb`.
+3. Si el volumen PostGIS está vacío, disponer del ZIP IGN y de `ogr2ogr` con soporte PostgreSQL. Ejecutar `python scripts/importar_ign.py <ruta-al-zip> --ogr2ogr <ruta-a-ogr2ogr>` y luego `python scripts/publicar_ign.py`.
+4. Entrar al visor en `http://localhost:8000/administracion/visor/`, iniciar sesión con Google, recargar y activar las capas deseadas.
+
+El ZIP del IGN, `.env` y los volúmenes de Docker no forman parte del commit. Cada integrante debe disponer de esos insumos y configurar sus credenciales. El catálogo JSON sí se versiona como inventario de la carga realizada.
+
+## 9.5 Qué se verificó y qué falta
+
+Se contrastaron las cantidades de las 47 tablas con los archivos DBF del ZIP. Para cada capa publicada se comprobó un `GetFeature` WFS con su conteo, un `GetMap` WMS y una leyenda PNG; también se verificó CORS para el origen local. Se probaron geometrías de provincias, localidades, puentes, rutas, agua y vegetación, y se generó un mapa combinado de las cinco primeras. Pasaron 13 tests de Django, Ruff, TypeScript, la compilación del frontend y el control de colores.
+
+La publicación inicial usa la simbología disponible en GeoServer; no se verificó que cada clase cartográfica del manual del IGN tenga un estilo propio. Quedan pendientes las consultas gráficas por punto y rectángulo, la medición de distancias, el ingreso de geometrías y atributos, el enlace de Django a PostGIS para los indicadores y los análisis de la Ruta Nacional 11. El despliegue de PostGIS y GeoServer en el VPS también queda pendiente.

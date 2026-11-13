@@ -1,6 +1,30 @@
-# Servicios de desarrollo. Base de datos: Para la etapa GIS, cambiar la imagen por
-# postgis/postgis:17-3.5 y definir DB_ENGINE=django.contrib.gis.db.backends.postgis.
+# Servicios de desarrollo. db guarda las cuentas de Django; gisdb guarda las
+# capas del IGN en PostGIS. GeoServer publica esas capas en el espacio ign.
 services:
+  # Web local: runserver sirve también los estáticos compilados. Gunicorn se usa
+  # en producción junto con nginx (k8s/), que atiende /static/.
+  web:
+    profiles: ["web"]
+    image: visor-sig-chaco:latest
+    build: .
+    env_file: .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.local
+      DEBUG: "True"
+      DB_HOST: db
+    command:
+      - python
+      - manage.py
+      - runserver
+      - 0.0.0.0:8000
+      - --noreload
+      - --skip-frontend-build
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
     image: postgres:17
     environment:
@@ -17,9 +41,30 @@ services:
       timeout: 3s
       retries: 10
 
+  gisdb:
+    image: postgis/postgis:17-3.5
+    # Esta etiqueta oficial se distribuye para amd64; Docker Desktop ARM la emula.
+    platform: linux/amd64
+    environment:
+      POSTGRES_DB: ${GIS_DB_NAME:-visor_ign}
+      POSTGRES_USER: ${GIS_DB_USER:-visor_ign}
+      POSTGRES_PASSWORD: ${GIS_DB_PASSWORD:-visor_ign}
+    ports:
+      - "127.0.0.1:${GIS_DB_PORT:-5434}:5432"
+    volumes:
+      - datos_gis:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   # Servidor de mapas WMS/WFS (ADR-0008). Consola: http://localhost:8085/geoserver
   geoserver:
     image: docker.osgeo.org/geoserver:2.27.2
+    depends_on:
+      gisdb:
+        condition: service_healthy
     environment:
       GEOSERVER_ADMIN_USER: admin
       GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_ADMIN_PASSWORD:-geoserver}
@@ -40,4 +85,5 @@ services:
 
 volumes:
   datos_db:
+  datos_gis:
   datos_geoserver:
