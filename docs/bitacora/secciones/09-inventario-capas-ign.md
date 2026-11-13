@@ -102,7 +102,9 @@ Las demás capas se publicaron con `ign:` seguido del nombre de la tabla. En una
 3. Si el volumen PostGIS está vacío, disponer del ZIP IGN y de `ogr2ogr` con soporte PostgreSQL. Ejecutar `python scripts/importar_ign.py <ruta-al-zip> --ogr2ogr <ruta-a-ogr2ogr>` y luego `python scripts/publicar_ign.py`.
 4. Entrar al visor en `http://localhost:8000/administracion/visor/`, iniciar sesión con Google, recargar y activar las capas deseadas.
 
-El ZIP del IGN, `.env` y los volúmenes de Docker no forman parte del commit. Cada integrante debe disponer de esos insumos y configurar sus credenciales. El catálogo JSON sí se versiona como inventario de la carga realizada.
+El ZIP del IGN, `.env` y los volúmenes de Docker no forman parte del commit. Para preparar una instalación local independiente mediante estos pasos, quien la prepare necesita el ZIP y debe configurar sus credenciales. El catálogo JSON sí se versiona como inventario de la carga realizada.
+
+El ADR-0011 plantea como idea un entorno compartido con las capas cargadas en el servidor; en ese caso, los usuarios accederían al visor sin descargar el ZIP. La propuesta aún no se implementó.
 
 ## Qué se verificó y qué falta
 

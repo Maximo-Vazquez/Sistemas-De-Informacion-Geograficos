@@ -6,6 +6,8 @@ Django sirve las páginas y monta pantallas React compiladas con Vite (no es una
 
 En desarrollo local también se puede ejecutar `docker compose up -d --build web geoserver`. El servicio opcional `web` usa `runserver` para servir las páginas y los estáticos compilados de la imagen, y recibe el entorno desde `.env`. Gunicorn conserva su uso de producción con nginx.
 
+Como alternativa para evaluar con el equipo, el ADR-0011 propone una aplicación y un GeoServer compartidos, conectados a un PostGIS compartido. Las capas se cargarían una vez en el servidor y los usuarios del visor accederían desde el navegador sin descargar el ZIP. Esta alternativa todavía no está aprobada ni desplegada.
+
 ## Stack actual
 
 Tabla: Tecnologías en uso

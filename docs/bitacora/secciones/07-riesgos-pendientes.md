@@ -17,7 +17,8 @@ Tabla: Riesgos identificados
 - [PENDIENTE] Completar los integrantes del grupo en `docs/bitacora/documento.yaml`.
 - El usuario confirmó el acceso autenticado al visor con Google y la visualización del mapa base. El servicio local `web` de Compose recibe las credenciales mediante `env_file: .env`; tras cambiar ese archivo, recrear el servicio.
 - [PENDIENTE] Cargar los secrets del deploy (`DJANGO_SECRET_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) y registrar la URI de redirección del dominio en Google.
-- Las 47 capas del ZIP IGN están cargadas en el PostGIS local `gisdb` y publicadas por WMS/WFS. Los volúmenes locales no se distribuyen con el repositorio; una instalación nueva requiere el ZIP y la importación documentada en el README.
+- Las 47 capas del ZIP IGN están cargadas en el PostGIS local `gisdb` y publicadas por WMS/WFS. Los volúmenes locales no se distribuyen con el repositorio; para reproducir la carga local se usa el ZIP y la importación documentada en el README.
+- [PENDIENTE] Evaluar con el equipo la propuesta de entorno compartido (ADR-0011), incluida la persistencia y la carga o restauración inicial de los datos.
 - [PENDIENTE] Definir el dominio de despliegue (nginx y `CSRF_TRUSTED_ORIGINS`).
 - [PENDIENTE] Conectar Django al PostGIS del proyecto para alimentar el panel y realizar los cálculos geográficos.
 - [PENDIENTE] Desplegar GeoServer en el VPS (manifiesto k8s) y definir su URL pública.

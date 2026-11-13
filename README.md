@@ -56,6 +56,8 @@ En esta computadora se usó `D:/TPI/sig_ign.zip`. El ZIP contiene la carpeta `SI
 
 El [inventario de capas y cambios](docs/bitacora/secciones/09-inventario-capas-ign.md) detalla los nombres, geometrías, cantidades, verificaciones y pendientes para el equipo.
 
+**Idea para evaluar:** una aplicación y un GeoServer compartidos conectados a PostGIS, con las capas cargadas una vez en el servidor, permitirían usar el visor sin descargar el ZIP en cada computadora. La alternativa está documentada como [propuesta ADR-0011](docs/bitacora/decisiones/ADR-0011-despliegue-compartido.md); todavía no está aprobada ni desplegada.
+
 ## Configurar el acceso con Google
 
 El proyecto usa Django allauth con Google como único proveedor. La consigna del TPI no exige este login; es la forma de acceso elegida para Administración y el visor. No hace falta crear una cuenta de Google nueva ni obtener una clave de Google Maps: el fondo del mapa usa Argenmap del IGN.

@@ -30,7 +30,7 @@ encabezado:
   - Bitácora técnica
 
 # SemVer: major al cerrar una entrega, minor por contenido nuevo, patch por correcciones.
-version: 0.8.0
+version: 0.9.0
 versiones:
   - version: 0.1.0
     fecha: 2026-10-22
@@ -83,3 +83,8 @@ versiones:
     cambios:
       - Inventario de las 47 capas, sus geometrías, tablas y cantidades
       - Resumen de los cambios realizados y guía para reproducir la carga en equipo
+  - version: 0.9.0
+    fecha: 2026-11-13
+    cambios:
+      - Propuesta de aplicación, GeoServer y PostGIS compartidos (ADR-0011)
+      - Aclaración de la carga inicial de capas y del acceso sin ZIP para usuarios del visor

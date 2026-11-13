@@ -17,13 +17,14 @@
 | **Proyecto** | Visor SIG Chaco |
 | **Lugar de realización** | Universidad Tecnológica Nacional – Facultad Regional Resistencia<br>French 414, Resistencia, Chaco, Argentina. |
 | **Nombre del documento** | Bitácora técnica – Visor SIG Chaco |
-| **Versión/Edición** | 0.8.0 |
+| **Versión/Edición** | 0.9.0 |
 | **Fecha de versión** | 13/11/2026 |
 
 ## Control de versiones
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.9.0 | 13/11/2026 | Propuesta de aplicación, GeoServer y PostGIS compartidos (ADR-0011); Aclaración de la carga inicial de capas y del acceso sin ZIP para usuarios del visor |
 | 0.8.0 | 13/11/2026 | Inventario de las 47 capas, sus geometrías, tablas y cantidades; Resumen de los cambios realizados y guía para reproducir la carga en equipo |
 | 0.7.0 | 13/11/2026 | Carga de las 47 capas IGN y sus 570.443 elementos en PostGIS (ADR-0010); Publicación en GeoServer y verificación individual de WMS, WFS y leyendas; Scripts y documentación para reproducir la importación y la publicación local |
 | 0.6.1 | 12/11/2026 | Corrección del arranque local para servir los archivos estáticos desde Compose; Confirmación del usuario del acceso autenticado al visor y visualización del mapa base |
@@ -89,6 +90,8 @@ Django sirve las páginas y monta pantallas React compiladas con Vite (no es una
 
 En desarrollo local también se puede ejecutar `docker compose up -d --build web geoserver`. El servicio opcional `web` usa `runserver` para servir las páginas y los estáticos compilados de la imagen, y recibe el entorno desde `.env`. Gunicorn conserva su uso de producción con nginx.
 
+Como alternativa para evaluar con el equipo, el ADR-0011 propone una aplicación y un GeoServer compartidos, conectados a un PostGIS compartido. Las capas se cargarían una vez en el servidor y los usuarios del visor accederían desde el navegador sin descargar el ZIP. Esta alternativa todavía no está aprobada ni desplegada.
+
 ## 3.2 Stack actual
 
 Tabla: Tecnologías en uso
@@ -153,6 +156,7 @@ Tabla: Resumen de decisiones
 | ADR-0008 | GeoServer como servidor de mapas WMS/WFS | aceptada | 29/10/2026 |
 | ADR-0009 | OpenLayers como biblioteca de mapas del visor | aceptada | 29/10/2026 |
 | ADR-0010 | PostGIS dedicado para las capas IGN en desarrollo | aceptada | 13/11/2026 |
+| ADR-0011 | Propuesta de aplicación, GeoServer y PostGIS compartidos | propuesta | 13/11/2026 |
 
 ## 5.1 ADR-0001 — Django con allauth y login de Google estándar
 
@@ -406,6 +410,36 @@ Los scripts de importación y publicación documentan el procedimiento. La impor
 - Las capas mantienen coordenadas geográficas EPSG:4326. Los cálculos métricos y buffers del TPI deben usar un CRS proyectado apropiado.
 - Django todavía no tiene una conexión GeoDjango al nuevo PostGIS ni cálculos para el panel. Estos trabajos continúan pendientes.
 - La etiqueta de la imagen PostGIS utilizada es `linux/amd64`; en este equipo ARM se ejecuta mediante la emulación de Docker Desktop.
+
+## 5.11 ADR-0011 — Propuesta de aplicación, GeoServer y PostGIS compartidos
+
+*Estado: propuesta · Fecha: 13/11/2026*
+
+### Contexto
+
+La instalación actual carga las capas IGN en un volumen PostGIS local y las publica en un GeoServer local. El repositorio contiene los scripts y el catálogo, pero no el ZIP ni los datos guardados en los volúmenes de Docker. Una persona que prepare una instalación local independiente necesita cargar las capas o contar con una copia de la base.
+
+La consigna pide una base de datos espacial, un servidor de mapas con WMS y WFS y un visor web. No exige que cada usuario descargue las capas ni especifica que el sistema deba estar publicado en internet.
+
+### Opciones consideradas
+
+- Cada integrante prepara y mantiene su propia base PostGIS y su propio GeoServer.
+- El equipo dispone de una aplicación y servicios SIG compartidos; las personas acceden al visor desde su navegador.
+- Se utiliza un entorno compartido para ver y presentar el proyecto, y cada integrante puede crear una instalación local independiente cuando necesite desarrollar o probar cambios.
+
+### Decisión
+
+**Propuesta para evaluar con el equipo:** disponer de una aplicación compartida y un GeoServer conectado a una base PostGIS compartida. Las capas se cargarían una vez en esa base mediante un proceso inicial por definir, o se restaurarían desde una copia ya preparada. Después, quienes usen el visor accederían por navegador sin descargar el ZIP.
+
+La propuesta admite instalaciones locales para desarrollo y pruebas. No implica que el equipo ya haya elegido esta alternativa ni que esté implementada o desplegada.
+
+### Consecuencias
+
+- La aplicación, GeoServer y los datos espaciales deben estar disponibles en un entorno accesible para las personas que usarán el visor. El navegador actual solicita los servicios de GeoServer directamente, por lo que su URL debe ser accesible desde ese navegador; `localhost` solo apunta a la propia computadora.
+- Hay que definir dónde guardar de forma persistente los datos de PostGIS y la configuración de GeoServer, y cómo inicializarlos y recuperarlos. Una imagen Docker de la aplicación no incluye automáticamente las capas cargadas en un volumen local.
+- Para el acceso compartido se deben definir las direcciones de la aplicación y de GeoServer. Si se mantiene el ingreso con Google, también habrá que registrar el callback correspondiente y configurar los orígenes necesarios para los servicios web.
+- El equipo debe acordar el entorno, quién lo administra y cómo se conservarán los datos y las credenciales. La disponibilidad del entorno compartido condicionará el acceso al visor.
+- La instalación local y los scripts de carga existentes seguirían siendo útiles para pruebas o para preparar los datos iniciales del entorno compartido.
 
 # 6 Bitácora de trabajo
 
@@ -706,6 +740,32 @@ Preparar una explicación de los cambios, las capas cargadas y su reproducción 
 - Revisar la documentación con el equipo y ejecutar la carga en las demás computadoras según sea necesario.
 - Completar las funcionalidades y los análisis SIG pendientes indicados en esta bitácora.
 
+## 6.11 13/11/2026 — Propuesta de despliegue compartido para el visor
+
+*Asistencia técnica del proyecto · Decisiones: ADR-0011*
+
+### Objetivo
+
+Dejar documentada una alternativa para que el equipo y los usuarios consulten las capas IGN sin descargar el ZIP en cada computadora.
+
+### Trabajo realizado
+
+- Se revisaron la consigna, la arquitectura y la documentación de la carga local de las 47 capas.
+- Se registró el ADR-0011 con estado `propuesta`: aplicación y GeoServer accesibles desde el navegador, conectados a un PostGIS compartido con las capas cargadas.
+- Se documentó que la carga inicial o restauración ocurriría en el servidor y que los usuarios finales no necesitarían el ZIP. Una instalación local independiente seguiría siendo una opción para desarrollo.
+- Se enlazó la propuesta desde el README y la sección de arquitectura, y se aclaró la diferencia entre los requisitos de una instalación local y los de un futuro entorno compartido.
+
+### Problemas y soluciones
+
+- El código y las imágenes no incluyen los datos que están en el volumen Docker local. La propuesta deja pendiente definir la persistencia, la carga inicial y la recuperación de PostGIS y de la configuración de GeoServer.
+- La configuración actual usa `localhost` para GeoServer. Para un acceso desde otras computadoras habría que definir una dirección accesible para los navegadores y ajustar la configuración correspondiente.
+
+### Pendientes
+
+- Revisar la propuesta con el equipo y decidir si se adopta y dónde se alojaría.
+- Si se adopta, definir el entorno, las direcciones, el proceso de carga o restauración inicial, la persistencia y el acceso de usuarios.
+- No se implementó ni desplegó la alternativa durante esta sesión.
+
 # 7 Riesgos y pendientes
 
 ## 7.1 Riesgos
@@ -725,7 +785,8 @@ Tabla: Riesgos identificados
 - [PENDIENTE] Completar los integrantes del grupo en `docs/bitacora/documento.yaml`.
 - El usuario confirmó el acceso autenticado al visor con Google y la visualización del mapa base. El servicio local `web` de Compose recibe las credenciales mediante `env_file: .env`; tras cambiar ese archivo, recrear el servicio.
 - [PENDIENTE] Cargar los secrets del deploy (`DJANGO_SECRET_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) y registrar la URI de redirección del dominio en Google.
-- Las 47 capas del ZIP IGN están cargadas en el PostGIS local `gisdb` y publicadas por WMS/WFS. Los volúmenes locales no se distribuyen con el repositorio; una instalación nueva requiere el ZIP y la importación documentada en el README.
+- Las 47 capas del ZIP IGN están cargadas en el PostGIS local `gisdb` y publicadas por WMS/WFS. Los volúmenes locales no se distribuyen con el repositorio; para reproducir la carga local se usa el ZIP y la importación documentada en el README.
+- [PENDIENTE] Evaluar con el equipo la propuesta de entorno compartido (ADR-0011), incluida la persistencia y la carga o restauración inicial de los datos.
 - [PENDIENTE] Definir el dominio de despliegue (nginx y `CSRF_TRUSTED_ORIGINS`).
 - [PENDIENTE] Conectar Django al PostGIS del proyecto para alimentar el panel y realizar los cálculos geográficos.
 - [PENDIENTE] Desplegar GeoServer en el VPS (manifiesto k8s) y definir su URL pública.
@@ -851,7 +912,9 @@ Las demás capas se publicaron con `ign:` seguido del nombre de la tabla. En una
 3. Si el volumen PostGIS está vacío, disponer del ZIP IGN y de `ogr2ogr` con soporte PostgreSQL. Ejecutar `python scripts/importar_ign.py <ruta-al-zip> --ogr2ogr <ruta-a-ogr2ogr>` y luego `python scripts/publicar_ign.py`.
 4. Entrar al visor en `http://localhost:8000/administracion/visor/`, iniciar sesión con Google, recargar y activar las capas deseadas.
 
-El ZIP del IGN, `.env` y los volúmenes de Docker no forman parte del commit. Cada integrante debe disponer de esos insumos y configurar sus credenciales. El catálogo JSON sí se versiona como inventario de la carga realizada.
+El ZIP del IGN, `.env` y los volúmenes de Docker no forman parte del commit. Para preparar una instalación local independiente mediante estos pasos, quien la prepare necesita el ZIP y debe configurar sus credenciales. El catálogo JSON sí se versiona como inventario de la carga realizada.
+
+El ADR-0011 plantea como idea un entorno compartido con las capas cargadas en el servidor; en ese caso, los usuarios accederían al visor sin descargar el ZIP. La propuesta aún no se implementó.
 
 ## 9.5 Qué se verificó y qué falta
 
