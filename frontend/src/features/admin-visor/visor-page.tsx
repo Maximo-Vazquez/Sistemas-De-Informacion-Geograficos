@@ -1,16 +1,39 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import { useTheme } from "next-themes"
+import type OlMap from "ol/Map"
 import { AdminLayout } from "@/components/admin/admin-layout"
 import { useDjangoMessages } from "@/lib/use-django-messages"
+import { BarraHerramientas, type Herramienta } from "./barra-herramientas"
 import { leerCapas } from "./capas"
 import { Mapa } from "./mapa"
 import { PanelCapas, type EstadoCapas } from "./panel-capas"
+import { PanelResultados } from "./panel-resultados"
 import type { VisorData } from "./types"
+import { useConsulta } from "./use-consulta"
+import { useMedicion } from "./use-medicion"
 
 export function VisorPage({ data }: { data: VisorData }) {
   useDjangoMessages(data.messages)
-  const { wmsUrl, url: geoserverUrl, workspace } = data.geoserver
+  const { wmsUrl, wfsUrl, url: geoserverUrl, workspace } = data.geoserver
   const [estado, setEstado] = useState<EstadoCapas>({ tipo: "cargando" })
   const [visibles, setVisibles] = useState<Set<string>>(() => new Set())
+  const [mapa, setMapa] = useState<OlMap | null>(null)
+  const [herramienta, setHerramienta] = useState<Herramienta>("navegar")
+  const oscuro = useTheme().resolvedTheme === "dark"
+  const medicion = useMedicion(mapa, herramienta === "medir", oscuro)
+  // Se consultan las capas encendidas, en el orden del panel.
+  const encendidas = useMemo(
+    () => (estado.tipo === "listo" ? estado.capas.filter((capa) => visibles.has(capa.nombre)) : []),
+    [estado, visibles],
+  )
+  const consulta = useConsulta({
+    mapa,
+    modo: herramienta === "punto" || herramienta === "rectangulo" ? herramienta : null,
+    capas: encendidas,
+    wmsUrl,
+    wfsUrl,
+    oscuro,
+  })
 
   useEffect(() => {
     const control = new AbortController()
@@ -60,12 +83,25 @@ export function VisorPage({ data }: { data: VisorData }) {
             consolaUrl={`${geoserverUrl}/web/`}
           />
         </aside>
-        <div className="order-1 min-h-[50dvh] flex-1 md:order-2 md:min-h-0">
+        <div className="relative order-1 min-h-[50dvh] flex-1 md:order-2 md:min-h-0">
           <Mapa
             wmsUrl={wmsUrl}
             extension={data.extension}
             capas={estado.tipo === "listo" ? estado.capas : []}
             visibles={visibles}
+            onMapa={setMapa}
+          />
+          <BarraHerramientas
+            herramienta={herramienta}
+            onCambiar={setHerramienta}
+            mediciones={medicion.cantidad}
+            onBorrarMediciones={medicion.borrar}
+          />
+          <PanelResultados
+            consulta={consulta.consulta}
+            seleccionado={consulta.seleccionado}
+            onSeleccionar={consulta.seleccionar}
+            onCerrar={consulta.cerrar}
           />
         </div>
       </div>

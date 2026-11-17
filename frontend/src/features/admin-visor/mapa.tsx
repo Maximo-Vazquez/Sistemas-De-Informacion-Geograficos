@@ -27,16 +27,19 @@ function fondo(oscuro: boolean) {
 
 // Mapa de OpenLayers: fondo Argenmap y una capa WMS por cada capa de GeoServer.
 // `visibles` decide qué capas se dibujan; cada capa se crea una sola vez.
+// `onMapa` entrega la instancia a las herramientas (medición, consultas…) que viven fuera.
 export function Mapa({
   wmsUrl,
   extension,
   capas,
   visibles,
+  onMapa,
 }: {
   wmsUrl: string
   extension: [number, number, number, number]
   capas: CapaWms[]
   visibles: Set<string>
+  onMapa?: (mapa: OlMap | null) => void
 }) {
   const contenedor = useRef<HTMLDivElement>(null)
   const mapa = useRef<OlMap | null>(null)
@@ -56,13 +59,15 @@ export function Mapa({
     })
     instancia.getView().fit(transformExtent(extension, "EPSG:4326", "EPSG:3857"), { padding: [24, 24, 24, 24] })
     mapa.current = instancia
+    onMapa?.(instancia)
     const registradas = capasWms.current
     return () => {
+      onMapa?.(null)
       instancia.setTarget(undefined)
       mapa.current = null
       registradas.clear()
     }
-  }, [extension])
+  }, [extension, onMapa])
 
   useEffect(() => {
     capaFondo.current?.setSource(fondo(oscuro))
