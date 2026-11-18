@@ -30,7 +30,7 @@ encabezado:
   - Bitácora técnica
 
 # SemVer: major al cerrar una entrega, minor por contenido nuevo, patch por correcciones.
-version: 0.9.0
+version: 0.10.0
 versiones:
   - version: 0.1.0
     fecha: 2026-10-22
@@ -88,3 +88,9 @@ versiones:
     cambios:
       - Propuesta de aplicación, GeoServer y PostGIS compartidos (ADR-0011)
       - Aclaración de la carga inicial de capas y del acceso sin ZIP para usuarios del visor
+  - version: 0.10.0
+    fecha: 2026-11-17
+    cambios:
+      - Integración de la rama del visor con búsqueda y grupos de capas
+      - Incorporación de medición de distancias y consultas por punto y rectángulo
+      - Actualización de verificaciones y pendientes de las funciones del visor

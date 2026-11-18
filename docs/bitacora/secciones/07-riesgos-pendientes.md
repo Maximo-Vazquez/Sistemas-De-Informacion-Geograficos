@@ -6,7 +6,7 @@ Tabla: Riesgos identificados
 
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
-| Fecha de entrega (01/12/2026 al 03/12/2026) con visor y análisis incompletos | Alto | Priorizar consultas, medición, alta de elementos y análisis de la ruta |
+| Fecha de entrega (01/12/2026 al 03/12/2026) con visor y análisis incompletos | Alto | Priorizar la validación del visor, el alta de elementos y el análisis de la ruta |
 | Cálculo de distancias y áreas en coordenadas geográficas | Alto | Reproyectar a un CRS métrico (POSGAR 2007, faja correspondiente) antes de medir y de generar buffers |
 | Categorías de población excluyentes (0–10 km y 10–20 km) mal calculadas | Medio | Usar anillos (buffer 20 km menos buffer 10 km) y documentar el criterio de asignación de localidades |
 | Credenciales de Google y del VPS | Medio | Solo en secrets de GitHub y `.env` local; nunca en el repositorio |
@@ -22,4 +22,6 @@ Tabla: Riesgos identificados
 - [PENDIENTE] Definir el dominio de despliegue (nginx y `CSRF_TRUSTED_ORIGINS`).
 - [PENDIENTE] Conectar Django al PostGIS del proyecto para alimentar el panel y realizar los cálculos geográficos.
 - [PENDIENTE] Desplegar GeoServer en el VPS (manifiesto k8s) y definir su URL pública.
-- [PENDIENTE] Completar consultas por punto y rectángulo, medición de distancias y alta de geometría con atributos; verificar interruptores y leyendas con capas reales.
+- Las consultas por punto y rectángulo y la medición de distancias están implementadas. La rama incorporada incluye pruebas de navegador con servicios simulados.
+- [PENDIENTE] Verificar esas herramientas, los interruptores y las leyendas con las capas reales del IGN.
+- [PENDIENTE] Implementar el alta de elementos con geometría y atributos.

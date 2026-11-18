@@ -17,13 +17,14 @@
 | **Proyecto** | Visor SIG Chaco |
 | **Lugar de realización** | Universidad Tecnológica Nacional – Facultad Regional Resistencia<br>French 414, Resistencia, Chaco, Argentina. |
 | **Nombre del documento** | Bitácora técnica – Visor SIG Chaco |
-| **Versión/Edición** | 0.9.0 |
-| **Fecha de versión** | 13/11/2026 |
+| **Versión/Edición** | 0.10.0 |
+| **Fecha de versión** | 17/11/2026 |
 
 ## Control de versiones
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.10.0 | 17/11/2026 | Integración de la rama del visor con búsqueda y grupos de capas; Incorporación de medición de distancias y consultas por punto y rectángulo; Actualización de verificaciones y pendientes de las funciones del visor |
 | 0.9.0 | 13/11/2026 | Propuesta de aplicación, GeoServer y PostGIS compartidos (ADR-0011); Aclaración de la carga inicial de capas y del acceso sin ZIP para usuarios del visor |
 | 0.8.0 | 13/11/2026 | Inventario de las 47 capas, sus geometrías, tablas y cantidades; Resumen de los cambios realizados y guía para reproducir la carga en equipo |
 | 0.7.0 | 13/11/2026 | Carga de las 47 capas IGN y sus 570.443 elementos en PostGIS (ADR-0010); Publicación en GeoServer y verificación individual de WMS, WFS y leyendas; Scripts y documentación para reproducir la importación y la publicación local |
@@ -766,6 +767,32 @@ Dejar documentada una alternativa para que el equipo y los usuarios consulten la
 - Si se adopta, definir el entorno, las direcciones, el proceso de carga o restauración inicial, la persistencia y el acceso de usuarios.
 - No se implementó ni desplegó la alternativa durante esta sesión.
 
+## 6.12 17/11/2026 — Integración de mejoras del visor
+
+*Asistencia técnica del proyecto*
+
+### Objetivo
+
+Integrar los cambios de la rama de Joaquín en la rama de trabajo que contiene la carga de capas IGN, conservando intacta `develop`.
+
+### Trabajo realizado
+
+- Se integró `feature/visor-buscador-grupos` en `feature/postgis-capas-ign` mediante un avance rápido de `b40b9de` a `984ef06`, sin conflictos.
+- Se incorporaron la búsqueda y agrupación de capas, la medición de distancias y las consultas gráficas por punto y rectángulo, junto con las pruebas de navegador aportadas en esa rama.
+- Se actualizaron los pendientes para distinguir las funciones implementadas de las que todavía necesitan validación con las capas reales.
+- Pasaron la compilación del frontend con comprobación de TypeScript, el control de colores, Ruff y las 13 pruebas de Django. El control orientativo de largo de archivos informó un componente que supera la referencia.
+
+### Problemas y soluciones
+
+- La integración fue posible sin resolver conflictos porque la rama del visor ya incluía el trabajo de carga de capas.
+- No se ejecutaron las pruebas de navegador durante esta integración. Las pruebas incorporadas para las herramientas del visor simulan las respuestas de los servicios de mapas.
+
+### Pendientes
+
+- Ejecutar las pruebas de navegador y verificar las herramientas, las leyendas y los interruptores con las capas reales del IGN.
+- Implementar el alta de elementos con geometría y atributos; la consigna del visor continúa en curso.
+- Completar los análisis y el mapa de las consignas restantes.
+
 # 7 Riesgos y pendientes
 
 ## 7.1 Riesgos
@@ -774,7 +801,7 @@ Tabla: Riesgos identificados
 
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
-| Fecha de entrega (01/12/2026 al 03/12/2026) con visor y análisis incompletos | Alto | Priorizar consultas, medición, alta de elementos y análisis de la ruta |
+| Fecha de entrega (01/12/2026 al 03/12/2026) con visor y análisis incompletos | Alto | Priorizar la validación del visor, el alta de elementos y el análisis de la ruta |
 | Cálculo de distancias y áreas en coordenadas geográficas | Alto | Reproyectar a un CRS métrico (POSGAR 2007, faja correspondiente) antes de medir y de generar buffers |
 | Categorías de población excluyentes (0–10 km y 10–20 km) mal calculadas | Medio | Usar anillos (buffer 20 km menos buffer 10 km) y documentar el criterio de asignación de localidades |
 | Credenciales de Google y del VPS | Medio | Solo en secrets de GitHub y `.env` local; nunca en el repositorio |
@@ -790,7 +817,9 @@ Tabla: Riesgos identificados
 - [PENDIENTE] Definir el dominio de despliegue (nginx y `CSRF_TRUSTED_ORIGINS`).
 - [PENDIENTE] Conectar Django al PostGIS del proyecto para alimentar el panel y realizar los cálculos geográficos.
 - [PENDIENTE] Desplegar GeoServer en el VPS (manifiesto k8s) y definir su URL pública.
-- [PENDIENTE] Completar consultas por punto y rectángulo, medición de distancias y alta de geometría con atributos; verificar interruptores y leyendas con capas reales.
+- Las consultas por punto y rectángulo y la medición de distancias están implementadas. La rama incorporada incluye pruebas de navegador con servicios simulados.
+- [PENDIENTE] Verificar esas herramientas, los interruptores y las leyendas con las capas reales del IGN.
+- [PENDIENTE] Implementar el alta de elementos con geometría y atributos.
 
 # 8 Glosario
 
