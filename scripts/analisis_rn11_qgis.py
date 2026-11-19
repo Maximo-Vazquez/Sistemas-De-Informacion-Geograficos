@@ -52,7 +52,7 @@ FIGURAS = SALIDA / "figuras"
 CARPETA_QGIS = SALIDA / "qgis"
 GPKG = CARPETA_QGIS / "rn11_qgis.gpkg"
 POSGAR = QgsCoordinateReferenceSystem("EPSG:5347")
-CONEXION = ("localhost", os.environ.get("POSTGIS_PORT", "5433"), "sig_ign", "sig_ign",
+CONEXION = ("127.0.0.1", os.environ.get("POSTGIS_PORT", "5433"), "sig_ign", "sig_ign",
             os.environ.get("POSTGIS_PASSWORD", "sig_ign"))
 
 

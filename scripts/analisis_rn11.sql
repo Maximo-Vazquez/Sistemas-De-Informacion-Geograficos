@@ -117,6 +117,15 @@ SELECT (SELECT km FROM analisis.rn11_chaco) AS km_traza,
        (SELECT count(*) FROM analisis.rn11_cruces_agua)::int AS cruces_con_cursos_de_agua
 FROM analisis.rn11_localidades;
 
+-- Claves primarias: GeoServer las usa como identificador estable de cada elemento (WFS).
+ALTER TABLE analisis.rn11_chaco ADD PRIMARY KEY (gid);
+ALTER TABLE analisis.rn11_areas ADD PRIMARY KEY (gid);
+ALTER TABLE analisis.rn11_localidades ADD PRIMARY KEY (gid);
+ALTER TABLE analisis.rn11_puentes ADD PRIMARY KEY (gid);
+-- GeoServer no expone la clave como atributo: el número del puente va también en su propia columna.
+ALTER TABLE analisis.rn11_puentes ADD COLUMN numero int;
+UPDATE analisis.rn11_puentes SET numero = gid;
+
 CREATE INDEX ON analisis.rn11_chaco USING gist (geom);
 CREATE INDEX ON analisis.rn11_areas USING gist (geom);
 CREATE INDEX ON analisis.rn11_localidades USING gist (geom);

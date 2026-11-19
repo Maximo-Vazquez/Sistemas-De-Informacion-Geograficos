@@ -17,11 +17,18 @@ test.describe("Sin sesión", () => {
 test.describe("Con sesión", () => {
   test.use(conSesion)
 
-  test("el panel muestra indicadores y gráficos en preparación", async ({ page }) => {
+  // Lee el análisis de PostGIS (python scripts/analisis_rn11.py); sin él, el panel queda vacío.
+  test("el panel muestra los resultados del análisis de la RN 11", async ({ page }) => {
     await page.goto("/administracion/")
     await expect(page.getByRole("heading", { level: 1, name: "Panel" })).toBeVisible()
     await expect(page.getByText("Km de traza")).toBeVisible()
-    await expect(page.getByText("Todavía sin datos")).toHaveCount(4)
+    if (await page.getByText("Todavía sin datos").count()) {
+      await expect(page.getByText("Todavía sin datos")).toHaveCount(3)
+      return
+    }
+    await expect(page.getByText("172,39 km")).toBeVisible()
+    await expect(page.getByRole("cell", { name: "Río Bermejo" })).toBeVisible()
+    await expect(page.getByRole("cell", { name: /Resistencia/ })).toBeVisible()
   })
 
   test("el inicio ofrece ir a Administración", async ({ page }) => {

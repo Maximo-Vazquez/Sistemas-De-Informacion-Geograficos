@@ -1,8 +1,11 @@
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
+
+from .postgis import consultar
 
 
 class PanelAccesoTests(TestCase):
@@ -22,6 +25,42 @@ class PanelAccesoTests(TestCase):
         self.assertEqual(respuesta.status_code, 200)
         datos = respuesta.context["panel_app"]
         self.assertEqual(datos["currentUrl"], self.url)
+        self.assertTrue(all(indicador["valor"] is None for indicador in datos["indicadores"]))
+        self.assertIsNone(datos["analisis"])
+
+
+RESUMEN = {
+    "km_traza": Decimal("172.39"), "partes_traza": 1, "poblacion_0_10": 363320, "poblacion_10_20": 26080,
+    "localidades_0_10": 22, "localidades_10_20": 15, "localidades_con_dato": 16,
+    "poblacion_fuera_del_chaco": 321131, "puentes": 21, "cruces_con_cursos_de_agua": 20,
+}
+LOCALIDAD = {"nombre": "Resistencia", "tipo": "Capital de Provincia", "departamento": "San Fernando",
+             "habitantes": 274490, "con_dato": True, "distancia_km": Decimal("2.70"), "categoria": "0 a 10 km"}
+PUENTE = {"numero": 21, "km_traza": Decimal("171.4"), "curso_de_agua": "Río Bermejo", "regimen": "Permanente",
+          "localidad_cercana": "Puerto Eva Perón"}
+
+
+class PanelAnalisisTests(TestCase):
+    url = reverse("administracion:panel")
+
+    def setUp(self):
+        self.client.force_login(get_user_model().objects.create_user("ana", "ana@example.com"))
+
+    @patch("apps.administracion.selectors.consultar")
+    def test_muestra_los_resultados_del_analisis_de_la_rn11(self, consultar):
+        consultar.return_value = [[RESUMEN], [LOCALIDAD], [PUENTE]]
+        datos = self.client.get(self.url).context["panel_app"]
+        valores = {indicador["id"]: indicador["valor"] for indicador in datos["indicadores"]}
+        self.assertEqual(valores, {"km": 172.39, "poblacion10": 363320, "poblacion20": 26080, "puentes": 21})
+        pistas = {indicador["id"]: indicador["hint"] for indicador in datos["indicadores"]}
+        self.assertEqual(pistas["puentes"], "Sobre 20 cruces con cursos de agua")
+        self.assertEqual(datos["analisis"]["localidades"][0]["distancia_km"], 2.7)
+        self.assertEqual(datos["analisis"]["puentes"][0]["km_traza"], 171.4)
+
+    @patch("apps.administracion.selectors.consultar", return_value=None)
+    def test_sin_analisis_el_panel_queda_vacio(self, _consultar):
+        datos = self.client.get(self.url).context["panel_app"]
+        self.assertIsNone(datos["analisis"])
         self.assertTrue(all(indicador["valor"] is None for indicador in datos["indicadores"]))
 
 
@@ -88,3 +127,14 @@ class TransaccionVisorTests(TestCase):
         pedido = urlopen.call_args.args[0]
         self.assertTrue(pedido.full_url.endswith("/ign/wfs"))
         self.assertTrue(pedido.get_header("Authorization").startswith("Basic "))
+
+
+class PostgisTests(SimpleTestCase):
+    @override_settings(POSTGIS={"host": "127.0.0.1", "port": "1", "dbname": "x", "user": "x", "password": "x"})
+    def test_si_postgis_no_responde_devuelve_none(self):
+        with self.assertLogs("apps.administracion.postgis", level="WARNING"):
+            self.assertIsNone(consultar("SELECT 1"))
+
+    @override_settings(POSTGIS=None)
+    def test_sin_configuracion_no_intenta_conectar(self):
+        self.assertIsNone(consultar("SELECT 1"))

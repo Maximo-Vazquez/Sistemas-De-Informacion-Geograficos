@@ -27,6 +27,17 @@ GEOSERVER_ADMIN_PASSWORD = env_str("GEOSERVER_ADMIN_PASSWORD", "geoserver")
 # Capas en las que el visor puede insertar elementos nuevos.
 GEOSERVER_CAPAS_EDITABLES = env_list("GEOSERVER_CAPAS_EDITABLES", "elementos_relevados")
 
+# PostGIS de las capas y del análisis de la RN 11 (ADR-0015, ADR-0017). Django solo lo lee.
+# 127.0.0.1 y no localhost: en Windows localhost prueba primero ::1 y Docker publica solo en IPv4,
+# así que cada conexión esperaría el tiempo de espera completo.
+POSTGIS = {
+    "host": env_str("POSTGIS_HOST", "127.0.0.1"),
+    "port": env_str("POSTGIS_PORT", "5433"),
+    "dbname": env_str("POSTGIS_DB", "sig_ign"),
+    "user": env_str("POSTGIS_USER", "sig_ign"),
+    "password": env_str("POSTGIS_PASSWORD", "sig_ign"),
+}
+
 INSTALLED_APPS = [
     # Primero: su runserver (migra y compila el frontend) reemplaza al de staticfiles.
     "apps.core",

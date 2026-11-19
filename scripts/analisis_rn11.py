@@ -43,7 +43,7 @@ CAPAS = {
                   ("0 a 10 km",)),
         ])),
     "rn11_puentes": ("Puentes sobre la RN 11", Estilo("Puentes de la RN 11", clases=[
-        Clase("Puente sobre la traza", punto("square", AZUL, 11) + texto("gid", 9, negrita=True)),
+        Clase("Puente sobre la traza", punto("square", AZUL, 11) + texto("numero", 9, negrita=True)),
     ])),
 }
 
