@@ -18,7 +18,7 @@ Unir en `develop` el trabajo hecho en paralelo: la rama local (visor con catálo
   - Capas: queda el servicio `postgis` con `scripts/cargar_capas_ign.py` (ADR-0015). Se retiran `gisdb`, `importar_ign.py`, `publicar_ign.py` y `estilos_ign.py`. ADR-0010 pasa a `reemplazada`.
   - Simbología: `cargar_capas_ign.py` genera y sube los SLD de las 47 capas desde `scripts/simbologia_ign.py` (ADR-0014). Se borran los seis SLD hechos a mano; queda `visor_elementos_relevados.sld`.
   - Despliegue: se aceptan los cambios de la otra rama. Se retiran `k8s/`, los workflows de imagen y deploy, `config/settings/production.py` y Gunicorn (ADR-0012).
-- Compose: se suma el servicio opcional `web` (perfil `web`) y los puertos quedan en `127.0.0.1`. Nueva variable `GEOSERVER_URL_INTERNA` para que Django llegue a GeoServer desde el contenedor.
+- Compose: los puertos quedan en `127.0.0.1`. Se retiran el servicio `web` de la otra rama, el `Dockerfile` y el `.dockerignore`: Django se ejecuta en la máquina con `python manage.py runserver`, que ya migra, compila el frontend y sirve los estáticos. Correrlo en un contenedor no aportaba nada y obligaba a una URL interna para llegar a GeoServer.
 - Los ADR locales duplicados se renumeraron: ADR-0010 → ADR-0015 y ADR-0011 → ADR-0016.
 
 ## Problemas y soluciones
@@ -28,7 +28,7 @@ Unir en `develop` el trabajo hecho en paralelo: la rama local (visor con catálo
 
 ## Verificación
 
-- `ruff check .`, `check_file_length.py` (solo el aviso previo de `media-upload.tsx`) y 20 tests de Django en verde, incluida una prueba nueva de `GEOSERVER_URL_INTERNA`.
+- `ruff check .`, `check_file_length.py` (solo el aviso previo de `media-upload.tsx`) y 19 tests de Django en verde.
 - `typecheck`, `build` y `check:colores` del frontend en verde.
 - Playwright: 15 pruebas en verde.
 - Contra los servicios reales: 48 capas con estilo (`--solo-publicar`), GetMap y leyenda PNG de seis capas, 570.443 elementos en PostGIS (igual que la otra carga) e inserción WFS-T real por `services.enviar_transaccion` (`totalInserted=1`, fila borrada después).

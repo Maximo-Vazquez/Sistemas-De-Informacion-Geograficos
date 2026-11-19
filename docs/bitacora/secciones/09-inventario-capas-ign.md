@@ -6,7 +6,7 @@ Este apartado describe los cambios para que el equipo pueda revisarlos y repetir
 
 La primera carga (13/11/2026) usó el servicio `gisdb` y los scripts `importar_ign.py`, `publicar_ign.py` y `estilos_ign.py`. Al unir las ramas en `develop` (19/11/2026) quedó un solo flujo (ADR-0015):
 
-- **`docker-compose.yml`:** servicio `postgis` (PostgreSQL 17 + PostGIS 3.5, base `sig_ign`, puerto 5433, volumen `datos_postgis`). GeoServer espera a que PostGIS esté disponible. El servicio opcional `web` (perfil `web`) ejecuta Django en un contenedor.
+- **`docker-compose.yml`:** servicio `postgis` (PostgreSQL 17 + PostGIS 3.5, base `sig_ign`, puerto 5433, volumen `datos_postgis`). GeoServer espera a que PostGIS esté disponible. Django no corre en un contenedor: se ejecuta con `python manage.py runserver`.
 - **`scripts/cargar_capas_ign.py`:** descomprime el ZIP, carga los 47 shapefiles con `ogr2ogr` de la imagen oficial de GDAL, crea la capa editable `elementos_relevados`, publica todo en el espacio `ign` (almacén `sig_ign`) y aplica la simbología de `scripts/simbologia_ign.py` (ADR-0014).
 - **`docs/tpi/catalogo_ign.json`:** inventario de la primera carga (nombres, conteos y SHA-256 del ZIP). Se conserva como referencia.
 - **Documentación de la revisión:** `docs/revision-2026-11-12.md` registra el diagnóstico del proyecto y su actualización posterior a la carga.

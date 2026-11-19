@@ -4,7 +4,7 @@
 
 Django sirve las páginas y monta pantallas React compiladas con Vite. PostgreSQL guarda los datos de la aplicación. Un servicio PostGIS separado guarda las capas IGN y la capa editable `elementos_relevados`; GeoServer las publica por WMS y WFS y recibe las altas por WFS-T a través de Django (ADR-0016).
 
-El TPI se ejecuta localmente (ADR-0012): `docker compose up -d postgis geoserver` y `python manage.py runserver`. Como alternativa, `docker compose --profile web up -d --build` levanta Django en un contenedor con `runserver`, que sirve las páginas y los estáticos compilados y recibe el entorno desde `.env`.
+El TPI se ejecuta localmente (ADR-0012): `docker compose up -d db postgis geoserver` levanta las bases y el servidor de mapas, y Django corre en la máquina con `python manage.py runserver`, que migra, compila el frontend y sirve los estáticos.
 
 ## Stack actual
 
@@ -22,7 +22,7 @@ Tabla: Tecnologías en uso
 | Gráficos | Recharts | 3.8 | Paneles de Administración |
 | Globo 3D | Magic UI Globe (cobe, WebGL) | 0.6 | Globo interactivo del inicio, centrado en el Chaco |
 | Calidad | Ruff | 0.17.2 | Estilo y complejidad ciclomática (≤ 10) |
-| Contenedores | Docker Compose y Dockerfile multi-etapa | Node 24 / Python 3.13 | Servicios locales del TPI |
+| Contenedores | Docker Compose | — | PostgreSQL, PostGIS y GeoServer locales |
 | CI | GitHub Actions | — | Calidad, bitácora y pruebas de navegador |
 | Análisis SIG | QGIS + QGIS MCP | 4.2.2 / 0.14.1 | Análisis del punto b y mapa del punto c |
 | Documentación | Python + Markdown + WeasyPrint | 70.0 | Esta bitácora en PDF |

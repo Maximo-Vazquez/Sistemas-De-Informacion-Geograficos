@@ -19,7 +19,6 @@ La consigna a.3 pide cargar elementos nuevos (geometría y atributos) en una cap
 ## Decisión
 
 - El visor arma la transacción con `ol/format/WFS` y la envía a `POST /administracion/visor/transaccion/` (sesión y CSRF). `apps/administracion/services.py` acepta solo `Insert` en las capas de `GEOSERVER_CAPAS_EDITABLES` y la reenvía a GeoServer con `GEOSERVER_ADMIN_USER`/`GEOSERVER_ADMIN_PASSWORD`. Rechaza `Update`, `Delete`, otras capas y XML inválido.
-- Django llega a GeoServer por `GEOSERVER_URL_INTERNA`, que por defecto es `GEOSERVER_URL`. En el servicio `web` de Compose vale `http://geoserver:8080/geoserver`.
 - La capa editable es `elementos_relevados` (PostGIS, geometría genérica, campos nombre, categoría, descripción, responsable y fecha). La crea `scripts/cargar_capas_ign.py` y su estilo está en `geoserver/estilos/visor_elementos_relevados.sld`. No se tocan las capas del IGN.
 
 ## Consecuencias

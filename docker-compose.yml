@@ -1,28 +1,8 @@
-# Servicios de desarrollo (ejecución local, ADR-0012). `db`: base de la aplicación Django.
+# Servicios de desarrollo (ejecución local, ADR-0012). Django corre en la máquina con
+# python manage.py runserver. `db`: base de la aplicación Django.
 # `postgis`: capas del SIG IGN 250 (ADR-0015), que GeoServer publica por WMS/WFS.
 # Carga: python scripts/cargar_capas_ign.py
 services:
-  # Opcional: Django en un contenedor (docker compose --profile web up -d). Sirve los
-  # estáticos compilados; para desarrollar se usa python manage.py runserver.
-  web:
-    profiles: ["web"]
-    image: visor-sig-chaco:latest
-    build: .
-    env_file: .env
-    environment:
-      DJANGO_SETTINGS_MODULE: config.settings.local
-      DEBUG: "True"
-      DB_HOST: db
-      # El navegador sigue usando localhost:8085; Django reenvía el WFS-T por la red de Compose.
-      GEOSERVER_URL_INTERNA: http://geoserver:8080/geoserver
-    ports:
-      - "127.0.0.1:8000:8000"
-    depends_on:
-      db:
-        condition: service_healthy
-      geoserver:
-        condition: service_healthy
-
   db:
     image: postgres:17
     environment:

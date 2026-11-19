@@ -24,7 +24,7 @@
 
 | Versión | Fecha | Cambios |
 |---|---|---|
-| 0.13.0 | 19/11/2026 | Unión en develop de las ramas del visor, la carga IGN y la simbología; Visor con catálogo de capas, orden arrastrable, globo, detalle y tabla de atributos; Carga de elementos por WFS-T a través de Django en elementos_relevados (ADR-0016); Carga única con cargar_capas_ign.py y simbología de las 47 capas (ADR-0015) |
+| 0.13.0 | 19/11/2026 | Unión en develop de las ramas del visor, la carga IGN y la simbología; Visor con catálogo de capas, orden arrastrable, globo, detalle y tabla de atributos; Carga de elementos por WFS-T a través de Django en elementos_relevados (ADR-0016); Carga única con cargar_capas_ign.py y simbología de las 47 capas (ADR-0015); Django se ejecuta con runserver; se retiran el Dockerfile y el contenedor web |
 | 0.12.0 | 19/11/2026 | Simbología por clases de las 47 capas IGN generada por script (ADR-0014); Leyenda del visor transparente y con el color de texto del tema; Consigna a.3 completa |
 | 0.11.0 | 19/11/2026 | Alta de geometrías y atributos en la capa vectorial Relevamientos; Retiro de la configuración de despliegue remoto y actualización del arranque local |
 | 0.10.0 | 17/11/2026 | Integración de la rama del visor con búsqueda y grupos de capas; Incorporación de medición de distancias y consultas por punto y rectángulo; Actualización de verificaciones y pendientes de las funciones del visor |
@@ -92,7 +92,7 @@ La cátedra pide, en grupos de 4 a 5 integrantes y con las capas del SIG IGN 250
 
 Django sirve las páginas y monta pantallas React compiladas con Vite. PostgreSQL guarda los datos de la aplicación. Un servicio PostGIS separado guarda las capas IGN y la capa editable `elementos_relevados`; GeoServer las publica por WMS y WFS y recibe las altas por WFS-T a través de Django (ADR-0016).
 
-El TPI se ejecuta localmente (ADR-0012): `docker compose up -d postgis geoserver` y `python manage.py runserver`. Como alternativa, `docker compose --profile web up -d --build` levanta Django en un contenedor con `runserver`, que sirve las páginas y los estáticos compilados y recibe el entorno desde `.env`.
+El TPI se ejecuta localmente (ADR-0012): `docker compose up -d db postgis geoserver` levanta las bases y el servidor de mapas, y Django corre en la máquina con `python manage.py runserver`, que migra, compila el frontend y sirve los estáticos.
 
 ## 3.2 Stack actual
 
@@ -110,7 +110,7 @@ Tabla: Tecnologías en uso
 | Gráficos | Recharts | 3.8 | Paneles de Administración |
 | Globo 3D | Magic UI Globe (cobe, WebGL) | 0.6 | Globo interactivo del inicio, centrado en el Chaco |
 | Calidad | Ruff | 0.17.2 | Estilo y complejidad ciclomática (≤ 10) |
-| Contenedores | Docker Compose y Dockerfile multi-etapa | Node 24 / Python 3.13 | Servicios locales del TPI |
+| Contenedores | Docker Compose | — | PostgreSQL, PostGIS y GeoServer locales |
 | CI | GitHub Actions | — | Calidad, bitácora y pruebas de navegador |
 | Análisis SIG | QGIS + QGIS MCP | 4.2.2 / 0.14.1 | Análisis del punto b y mapa del punto c |
 | Documentación | Python + Markdown + WeasyPrint | 70.0 | Esta bitácora en PDF |
@@ -557,7 +557,6 @@ La consigna a.3 pide cargar elementos nuevos (geometría y atributos) en una cap
 ### Decisión
 
 - El visor arma la transacción con `ol/format/WFS` y la envía a `POST /administracion/visor/transaccion/` (sesión y CSRF). `apps/administracion/services.py` acepta solo `Insert` en las capas de `GEOSERVER_CAPAS_EDITABLES` y la reenvía a GeoServer con `GEOSERVER_ADMIN_USER`/`GEOSERVER_ADMIN_PASSWORD`. Rechaza `Update`, `Delete`, otras capas y XML inválido.
-- Django llega a GeoServer por `GEOSERVER_URL_INTERNA`, que por defecto es `GEOSERVER_URL`. En el servicio `web` de Compose vale `http://geoserver:8080/geoserver`.
 - La capa editable es `elementos_relevados` (PostGIS, geometría genérica, campos nombre, categoría, descripción, responsable y fecha). La crea `scripts/cargar_capas_ign.py` y su estilo está en `geoserver/estilos/visor_elementos_relevados.sld`. No se tocan las capas del IGN.
 
 ### Consecuencias
@@ -1093,7 +1092,7 @@ Unir en `develop` el trabajo hecho en paralelo: la rama local (visor con catálo
   - Capas: queda el servicio `postgis` con `scripts/cargar_capas_ign.py` (ADR-0015). Se retiran `gisdb`, `importar_ign.py`, `publicar_ign.py` y `estilos_ign.py`. ADR-0010 pasa a `reemplazada`.
   - Simbología: `cargar_capas_ign.py` genera y sube los SLD de las 47 capas desde `scripts/simbologia_ign.py` (ADR-0014). Se borran los seis SLD hechos a mano; queda `visor_elementos_relevados.sld`.
   - Despliegue: se aceptan los cambios de la otra rama. Se retiran `k8s/`, los workflows de imagen y deploy, `config/settings/production.py` y Gunicorn (ADR-0012).
-- Compose: se suma el servicio opcional `web` (perfil `web`) y los puertos quedan en `127.0.0.1`. Nueva variable `GEOSERVER_URL_INTERNA` para que Django llegue a GeoServer desde el contenedor.
+- Compose: los puertos quedan en `127.0.0.1`. Se retiran el servicio `web` de la otra rama, el `Dockerfile` y el `.dockerignore`: Django se ejecuta en la máquina con `python manage.py runserver`, que ya migra, compila el frontend y sirve los estáticos. Correrlo en un contenedor no aportaba nada y obligaba a una URL interna para llegar a GeoServer.
 - Los ADR locales duplicados se renumeraron: ADR-0010 → ADR-0015 y ADR-0011 → ADR-0016.
 
 ### Problemas y soluciones
@@ -1103,7 +1102,7 @@ Unir en `develop` el trabajo hecho en paralelo: la rama local (visor con catálo
 
 ### Verificación
 
-- `ruff check .`, `check_file_length.py` (solo el aviso previo de `media-upload.tsx`) y 20 tests de Django en verde, incluida una prueba nueva de `GEOSERVER_URL_INTERNA`.
+- `ruff check .`, `check_file_length.py` (solo el aviso previo de `media-upload.tsx`) y 19 tests de Django en verde.
 - `typecheck`, `build` y `check:colores` del frontend en verde.
 - Playwright: 15 pruebas en verde.
 - Contra los servicios reales: 48 capas con estilo (`--solo-publicar`), GetMap y leyenda PNG de seis capas, 570.443 elementos en PostGIS (igual que la otra carga) e inserción WFS-T real por `services.enviar_transaccion` (`totalInserted=1`, fila borrada después).
@@ -1131,7 +1130,7 @@ Tabla: Riesgos identificados
 ## 7.2 Pendientes
 
 - [PENDIENTE] Completar los integrantes del grupo en `docs/bitacora/documento.yaml`.
-- El usuario confirmó el acceso autenticado al visor con Google y la visualización del mapa base. Si se usa el servicio `web` de Compose, recibe las credenciales mediante `env_file: .env`; tras cambiar ese archivo, recrear el servicio.
+- El usuario confirmó el acceso autenticado al visor con Google y la visualización del mapa base.
 - Las 47 capas del ZIP IGN están cargadas en el PostGIS local `postgis` (base `sig_ign`) y publicadas por WMS/WFS con su simbología (ADR-0014, ADR-0015). Los volúmenes locales no se distribuyen con el repositorio: cada integrante corre `python scripts/cargar_capas_ign.py` con el ZIP.
 - Quien tenga el volumen `datos_gis` del servicio `gisdb` (rama anterior) tiene que volver a cargar las capas con el script; ese volumen ya no se usa.
 - [PENDIENTE] Conectar Django al PostGIS del proyecto para alimentar el panel y realizar los cálculos geográficos.
@@ -1161,7 +1160,7 @@ Este apartado describe los cambios para que el equipo pueda revisarlos y repetir
 
 La primera carga (13/11/2026) usó el servicio `gisdb` y los scripts `importar_ign.py`, `publicar_ign.py` y `estilos_ign.py`. Al unir las ramas en `develop` (19/11/2026) quedó un solo flujo (ADR-0015):
 
-- **`docker-compose.yml`:** servicio `postgis` (PostgreSQL 17 + PostGIS 3.5, base `sig_ign`, puerto 5433, volumen `datos_postgis`). GeoServer espera a que PostGIS esté disponible. El servicio opcional `web` (perfil `web`) ejecuta Django en un contenedor.
+- **`docker-compose.yml`:** servicio `postgis` (PostgreSQL 17 + PostGIS 3.5, base `sig_ign`, puerto 5433, volumen `datos_postgis`). GeoServer espera a que PostGIS esté disponible. Django no corre en un contenedor: se ejecuta con `python manage.py runserver`.
 - **`scripts/cargar_capas_ign.py`:** descomprime el ZIP, carga los 47 shapefiles con `ogr2ogr` de la imagen oficial de GDAL, crea la capa editable `elementos_relevados`, publica todo en el espacio `ign` (almacén `sig_ign`) y aplica la simbología de `scripts/simbologia_ign.py` (ADR-0014).
 - **`docs/tpi/catalogo_ign.json`:** inventario de la primera carga (nombres, conteos y SHA-256 del ZIP). Se conserva como referencia.
 - **Documentación de la revisión:** `docs/revision-2026-11-12.md` registra el diagnóstico del proyecto y su actualización posterior a la carga.

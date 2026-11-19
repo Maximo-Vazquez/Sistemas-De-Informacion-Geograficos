@@ -37,7 +37,7 @@ Cuando un archivo crece, convertirlo en paquete por responsabilidad (`views/`, `
 
 ## Base de datos y GIS
 - PostgreSQL. Migraciones revisadas a mano antes de commitear; `makemigrations --check` corre en CI.
-- Etapa GIS: `DB_ENGINE=django.contrib.gis.db.backends.postgis`, `django.contrib.gis` en `INSTALLED_APPS`, modelos con `PointField`/`LineStringField`/`PolygonField` y SRID explícito. Cálculos de distancia/área en un CRS proyectado (p. ej. POSGAR 2007 faja 5, EPSG:5347), nunca en grados. Dependencias de sistema (GDAL/GEOS/PROJ) indicadas en el Dockerfile.
+- Etapa GIS: `DB_ENGINE=django.contrib.gis.db.backends.postgis`, `django.contrib.gis` en `INSTALLED_APPS`, modelos con `PointField`/`LineStringField`/`PolygonField` y SRID explícito. Cálculos de distancia/área en un CRS proyectado (p. ej. POSGAR 2007 faja 5, EPSG:5347), nunca en grados. Dependencias de sistema (GDAL/GEOS/PROJ) instaladas en la máquina donde corre Django.
 
 ## Tests
 - `python manage.py test --settings=config.settings.test`. Un test por comportamiento, nombres en español que describan el resultado (`test_mail_fuera_de_la_lista_recibe_403`).

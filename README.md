@@ -24,16 +24,6 @@ $env:VITE_OUTPUT_DIR="../static/frontend"; pnpm --dir frontend exec vite build
 
 Abrí http://localhost:8000. Para el login con Google, registrá `http://localhost:8000/accounts/google/login/callback/` como URI de redirección en las credenciales OAuth. Cualquier cuenta de Google que inicie sesión accede a Administración.
 
-### Aplicación local con Docker
-
-Como alternativa al Python nativo, completar `.env` y ejecutar:
-
-```powershell
-docker compose --profile web up -d --build
-```
-
-La aplicación queda en http://localhost:8000. El servicio `web` usa los assets compilados en la imagen y `runserver` para servirlos. Django llega a GeoServer por la red de Compose (`GEOSERVER_URL_INTERNA`); el navegador sigue usando http://localhost:8085. Tras modificar `.env`, ejecutar `docker compose --profile web up -d --force-recreate web`.
-
 Para seguir con Google y volver al visor: http://localhost:8000/accounts/google/login/?next=/administracion/visor/.
 
 ### Agregar elementos al mapa
@@ -77,15 +67,13 @@ Si el equipo ya tiene un cliente OAuth, se pueden reutilizar sus credenciales si
 
 El secreto pertenece a la aplicación; no es la contraseña personal de Google. La configuración actual pide perfil y correo. No necesita orígenes JavaScript para este flujo de autenticación del servidor. Referencia: [documentación de clientes OAuth de Google](https://support.google.com/cloud/answer/15549257?hl=es).
 
-Si Django corre en Docker, `.env` debe estar disponible en ese contenedor o sus variables deben pasarse al crearlo. El servicio `web` de Compose ya usa `env_file: .env`. Crear o modificar el archivo solamente en Windows no actualiza las variables de un contenedor iniciado: recrear el servicio después del cambio.
-
 La revisión de cumplimiento de la consigna está en [docs/revision-2026-11-12.md](docs/revision-2026-11-12.md).
 
 ## Estructura
 
 - `config/`, `apps/`, `templates/`: proyecto Django.
 - `frontend/`: React + Vite + shadcn (Base UI) y coss.
-- `Dockerfile` y `docker-compose.yml`: ejecución local. `.github/workflows/`: comprobaciones de calidad y pruebas.
+- `docker-compose.yml`: PostgreSQL, PostGIS y GeoServer locales; Django corre con `runserver`. `.github/workflows/`: comprobaciones de calidad y pruebas.
 - `docs/bitacora/`: fuentes de la bitácora; `python scripts/generar_bitacora.py` genera el Markdown y el PDF.
 - `docs/qgis-mcp-y-skill.md`: configuración de QGIS MCP para el análisis y la cartografía.
 - `AGENTS.md` y `.agents/skills/`: instrucciones para trabajar en el repositorio.

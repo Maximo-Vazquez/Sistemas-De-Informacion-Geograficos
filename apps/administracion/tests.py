@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.urls import reverse
 
 
@@ -88,13 +88,3 @@ class TransaccionVisorTests(TestCase):
         pedido = urlopen.call_args.args[0]
         self.assertTrue(pedido.full_url.endswith("/ign/wfs"))
         self.assertTrue(pedido.get_header("Authorization").startswith("Basic "))
-
-    @override_settings(GEOSERVER_URL_INTERNA="http://geoserver:8080/geoserver")
-    @patch("apps.administracion.services.urllib.request.urlopen")
-    def test_usa_la_url_interna_de_geoserver(self, urlopen):
-        respuesta = MagicMock(status=200)
-        respuesta.read.return_value = b"<TransactionResponse/>"
-        respuesta.headers.get_content_type.return_value = "text/xml"
-        urlopen.return_value.__enter__.return_value = respuesta
-        self._post(INSERTAR)
-        self.assertEqual(urlopen.call_args.args[0].full_url, "http://geoserver:8080/geoserver/ign/wfs")
