@@ -30,7 +30,7 @@ encabezado:
   - Bitácora técnica
 
 # SemVer: major al cerrar una entrega, minor por contenido nuevo, patch por correcciones.
-version: 0.13.0
+version: 0.14.0
 versiones:
   - version: 0.1.0
     fecha: 2026-10-22
@@ -113,3 +113,9 @@ versiones:
       - Carga de elementos por WFS-T a través de Django en elementos_relevados (ADR-0016)
       - Carga única con cargar_capas_ign.py y simbología de las 47 capas (ADR-0015)
       - Django se ejecuta con runserver; se retiran el Dockerfile y el contenedor web
+  - version: 0.14.0
+    fecha: 2026-11-19
+    cambios:
+      - Análisis de la RN 11 en PostGIS y QGIS con resultados validados (ADR-0017)
+      - Resultados en el panel y en el visor (tema Obra RN 11)
+      - Informe del punto b en PDF con figuras, tablas y referencias, y video explicativo

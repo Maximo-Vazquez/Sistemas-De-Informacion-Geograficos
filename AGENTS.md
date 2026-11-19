@@ -4,7 +4,7 @@
 - Aplicación web del Trabajo Práctico Integrador de SIG (UTN FRRe, 2026). Consigna: `docs/tpi/practico.pdf`.
 - Django con plantillas mínimas que montan pantallas React + TypeScript + Vite + Tailwind v4. No es una SPA.
 - Autenticación estándar de Django con allauth y Google; no agregar proveedores OIDC propios ni JWT.
-- Etapa actual: ejecución local (ADR-0012), sin despliegue remoto. PostGIS (puerto 5433) y GeoServer (puerto 8085) en Docker con las 47 capas del IGN (`docker compose up -d postgis geoserver`, `python scripts/cargar_capas_ign.py`) y visor OpenLayers en `/administracion/visor/`. El visor cumple a.3 (consulta, medición, carga por WFS-T vía Django en `elementos_relevados`, leyenda con la simbología de `scripts/simbologia_ign.py`). Siguiente: análisis del punto b.
+- Etapa actual: ejecución local (ADR-0012), sin despliegue remoto. PostGIS (puerto 5433) y GeoServer (puerto 8085) en Docker con las 47 capas del IGN (`docker compose up -d postgis geoserver`, `python scripts/cargar_capas_ign.py`) y visor OpenLayers en `/administracion/visor/`. El visor cumple a.3 (consulta, medición, carga por WFS-T vía Django en `elementos_relevados`, leyenda con la simbología de `scripts/simbologia_ign.py`). Punto b resuelto: `python scripts/analisis_rn11.py` (PostGIS, esquema `analisis`), validación con `scripts/analisis_rn11_qgis.py` (Python de QGIS) e informe con `python scripts/generar_informe_b.py` (ADR-0017). Siguiente: mapa A4 del punto c.
 
 ## Estructura
 - `config/settings/`: configuración común, local (por defecto) y de pruebas. Entorno solo vía `config/settings/entorno.py`.

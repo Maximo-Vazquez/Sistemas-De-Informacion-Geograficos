@@ -17,13 +17,14 @@
 | **Proyecto** | Visor SIG Chaco |
 | **Lugar de realización** | Universidad Tecnológica Nacional – Facultad Regional Resistencia<br>French 414, Resistencia, Chaco, Argentina. |
 | **Nombre del documento** | Bitácora técnica – Visor SIG Chaco |
-| **Versión/Edición** | 0.13.0 |
+| **Versión/Edición** | 0.14.0 |
 | **Fecha de versión** | 19/11/2026 |
 
 ## Control de versiones
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.14.0 | 19/11/2026 | Análisis de la RN 11 en PostGIS y QGIS con resultados validados (ADR-0017); Resultados en el panel y en el visor (tema Obra RN 11); Informe del punto b en PDF con figuras, tablas y referencias, y video explicativo |
 | 0.13.0 | 19/11/2026 | Unión en develop de las ramas del visor, la carga IGN y la simbología; Visor con catálogo de capas, orden arrastrable, globo, detalle y tabla de atributos; Carga de elementos por WFS-T a través de Django en elementos_relevados (ADR-0016); Carga única con cargar_capas_ign.py y simbología de las 47 capas (ADR-0015); Django se ejecuta con runserver; se retiran el Dockerfile y el contenedor web |
 | 0.12.0 | 19/11/2026 | Simbología por clases de las 47 capas IGN generada por script (ADR-0014); Leyenda del visor transparente y con el color de texto del tema; Consigna a.3 completa |
 | 0.11.0 | 19/11/2026 | Alta de geometrías y atributos en la capa vectorial Relevamientos; Retiro de la configuración de despliegue remoto y actualización del arranque local |
@@ -120,11 +121,12 @@ Tabla: Tecnologías en uso
 | Servidor de mapas | GeoServer (Docker) | 2.27.2 | Servicios WMS y WFS de las capas (ADR-0008) |
 | Biblioteca de mapas | OpenLayers | 10.6.1 | Visor web de Administración (ADR-0009) |
 | Listas ordenables | dnd-kit | 6.3.1 | Orden de las capas en el visor |
+| Análisis espacial | SQL de PostGIS + Procesamiento de QGIS (PyQGIS) | 3.5 / 4.2.2 | Punto b: traza, áreas, población y puentes (ADR-0017) |
 | Estilos de capas | SLD 1.0 (`scripts/simbologia_ign.py`) | — | Simbología y leyenda por clases de las 47 capas (ADR-0014) |
 
 ## 3.3 Componentes previstos
 
-- Conexión de Django a PostGIS para los cálculos del panel sobre la RN 11.
+- Mapa A4 del punto c a partir de las capas `rn11_*` del esquema `analisis`.
 
 # 4 Estado de las consignas del TPI
 
@@ -137,7 +139,7 @@ Tabla: Estado de las consignas del TPI
 | a.1 | Servidor de bases de datos espaciales con las capas vectoriales del SIG IGN 250 | Completa | ADR-0003, ADR-0015 |
 | a.2 | Servidor de mapas con servicios OGC (WMS y WFS) | Completa | ADR-0008 |
 | a.3 | Visor web con navegación, capas, leyenda, escala, consultas, medición y carga de elementos por WFS-T | Completa | ADR-0009, ADR-0014, ADR-0016 |
-| b | Análisis de la RN 11 en el Chaco (km, población a 10 y 20 km, puentes) e informe | Pendiente | ADR-0006 |
+| b | Análisis de la RN 11 en el Chaco (km, población a 10 y 20 km, puentes) e informe | Completa | ADR-0006, ADR-0017 |
 | c | Mapa A4 en PDF con la traza, áreas de influencia, puentes y accidentes naturales | Pendiente | ADR-0006 |
 
 # 5 Registro de decisiones (ADR)
@@ -164,6 +166,7 @@ Tabla: Resumen de decisiones
 | ADR-0014 | Simbología de las capas IGN en SLD generada por script | aceptada | 19/11/2026 |
 | ADR-0015 | PostGIS en Docker y carga única de las capas del SIG IGN 250 | aceptada | 19/11/2026 |
 | ADR-0016 | Carga de elementos por WFS-T a través de Django en una capa de PostGIS | aceptada | 19/11/2026 |
+| ADR-0017 | Método del análisis de la RN 11 (punto b) | aceptada | 19/11/2026 |
 
 ## 5.1 ADR-0001 — Django con allauth y login de Google estándar
 
@@ -564,6 +567,37 @@ La consigna a.3 pide cargar elementos nuevos (geometría y atributos) en una cap
 - La clave de GeoServer nunca llega al navegador y el visor solo puede agregar, no modificar ni borrar.
 - La capa nueva es una capa más de GeoServer: se ve por WMS, se consulta por WFS y se analiza en PostGIS junto con las del IGN.
 - Se retiran el modelo `ElementoVectorial`, su formulario, su migración y la ruta `/administracion/visor/elementos/`.
+
+## 5.17 ADR-0017 — Método del análisis de la RN 11 (punto b)
+
+*Estado: aceptada · Fecha: 19/11/2026*
+
+### Contexto
+
+La consigna b pide el largo de la RN 11 en el Chaco, la población a 10 km y de 10 a 20 km (categorías excluyentes) y los puentes que cruzan la traza, con un informe que muestre los pasos. Las capas del SIG IGN 250 están en coordenadas geográficas. La red vial tiene dos rutas con el número 11. La capa de puentes son puntos sin el camino al que pertenecen. Dentro de los 20 km también hay localidades de otras provincias, entre ellas la ciudad de Corrientes.
+
+### Opciones consideradas
+
+- Hacer el análisis solo en QGIS, a mano, con capturas.
+- Hacerlo en PostGIS con SQL, repetirlo en QGIS para validar y generar el informe a partir de las tablas resultantes.
+- Para los puentes: contar los puntos a cierta distancia de la traza, o pedir además que el camino más cercano sea la RN 11.
+- Para la población: incluir todas las localidades dentro de los buffers, o solo las del Chaco.
+
+### Decisión
+
+- El análisis se calcula en PostGIS (`scripts/analisis_rn11.sql` y `analisis_rn11.py`, esquema `analisis`) y se repite con algoritmos de Procesamiento de QGIS (`scripts/analisis_rn11_qgis.py`), que compara cada número con PostGIS.
+- Las medidas se hacen en POSGAR 2007 faja 5 (EPSG:5347).
+- La traza se forma con los tramos `nro_ruta = '11'` y `administra = 'Nacional'` (la RP 11 es otra ruta), recortados al polígono del Chaco.
+- Las categorías se arman con un buffer de 10 km y un anillo de 20 km menos 10 km, recortados al Chaco. La población es la suma de `canthab` (Censo 2001) de las localidades de cada área.
+- Solo se cuentan las localidades cuyo atributo `provincia` es Chaco; las de otras provincias se informan aparte. Se usa el atributo y no el polígono porque, sobre el río Bermejo, General Lucio V. Mansilla (Formosa) cae dentro del polígono del Chaco.
+- Un puente es de la RN 11 si está a 500 m o menos de la traza y su camino más cercano es la RN 11. Se controla contra los cruces de la traza con los cursos de agua.
+- El informe (`scripts/generar_informe_b.py`) toma sus números de `analisis.rn11_resumen`. Lo mismo hacen el panel de Administración y el video.
+
+### Consecuencias
+
+- Resultado: 172,39 km; 360.983 habitantes hasta 10 km y 26.080 de 10 a 20 km; 21 puentes. PostGIS y QGIS coinciden en los seis valores.
+- El análisis se repite con dos comandos y alimenta el visor (capas `rn11_*` en GeoServer), el panel y el informe sin copiar números a mano.
+- Limitaciones aceptadas: población del Censo 2001, solo 15 de 36 localidades del Chaco con dato, localidades representadas como puntos, y el cruce del Río de Oro sin punto de puente en la capa del IGN.
 
 # 6 Bitácora de trabajo
 
@@ -1047,7 +1081,41 @@ Completar el ingreso de geometrías y atributos del visor y preparar la ejecuci�
 
 - Demostrar el visor con las capas reales del IGN y completar los análisis y la cartografía de la Ruta Nacional 11.
 
-## 6.17 19/11/2026 — Simbología y leyenda por clases de las capas IGN
+## 6.17 19/11/2026 — Análisis de la RN 11 (punto b), informe y video
+
+*Vazquez Maximo Ezequiel · Decisiones: ADR-0017*
+
+### Objetivo
+
+Resolver la consigna b: largo de la RN 11 en el Chaco, población afectada a 10 km y de 10 a 20 km, y puentes sobre la traza. Además, entregar un informe con pasos, capturas y referencias, y un video explicativo.
+
+### Trabajo realizado
+
+- `scripts/analisis_rn11.sql` y `analisis_rn11.py`: esquema `analisis` en PostGIS con la traza, las áreas, las localidades, los puentes, los cruces con cursos de agua y un resumen. Publica `rn11_chaco`, `rn11_areas`, `rn11_localidades` y `rn11_puentes` en GeoServer con su simbología.
+- `scripts/analisis_rn11_qgis.py`: los mismos pasos con algoritmos de Procesamiento de QGIS 4.2.2 (PyQGIS sin interfaz), figuras de cada paso, el proyecto `docs/tpi/punto-b/qgis/rn11.qgz` y `validacion.json`.
+- Panel de Administración con indicadores, dona de población y tablas de localidades y puentes, leídos de PostGIS (`apps/administracion/postgis.py`). En el visor, grupo "Análisis RN 11" y tema rápido "Obra RN 11".
+- Informe `docs/tpi/punto-b/salida/informe-punto-b.pdf`, generado con `scripts/generar_informe_b.py` y el estilo de la bitácora: metodología con SQL y figuras, tablas, validación, limitaciones y referencias.
+- Video `videos/03-analisis-rn11/` (unos 2 min 20 s, narrado con Gemini TTS) con un mapa SVG animado exportado de PostGIS. La carpeta `videos/` no se versiona.
+
+### Problemas y soluciones
+
+- `localhost` tardaba 3 s por conexión a PostGIS: en Windows prueba primero `::1` y Docker publica solo en IPv4. Se usa `127.0.0.1`; la prueba e2e del panel bajó de 11 s a 1,5 s.
+- Sin clave primaria, GeoServer generaba identificadores `fid-…` y no exponía `gid` para rotular. Se agregaron claves primarias y la columna `numero`.
+- General Lucio V. Mansilla (Formosa) caía dentro del polígono del Chaco sobre el Bermejo. Las localidades se asignan por el atributo `provincia`.
+- En QGIS 4 las capas de símbolo no tienen `setProperties` y la expresión `line_locate_point` sobre una WKT larga devolvía nulos. Se crean símbolos nuevos y se usa `QgsGeometry.lineLocatePoint`.
+- La API de voz limita a 10 pedidos por minuto. `narrar.py` se reanuda y solo pide las frases que faltan.
+
+### Verificación
+
+- PostGIS y QGIS coinciden: 172,39 km; 360.983 y 26.080 habitantes; 21 y 15 localidades; 21 puentes.
+- `ruff check .`, 23 tests de Django, `typecheck`, `build` y `check:colores` en verde. Playwright: 15 pruebas en verde y 4 capturas del punto b.
+
+### Pendientes
+
+- [PENDIENTE] Revisar con el grupo el informe y el video antes de la entrega.
+- Punto c: mapa A4 en PDF con la traza, las áreas, los puentes y los accidentes naturales.
+
+## 6.18 19/11/2026 — Simbología y leyenda por clases de las capas IGN
 
 *Asistencia técnica del proyecto · Decisiones: ADR-0014*
 
@@ -1075,7 +1143,7 @@ Completar la leyenda con las clases de la simbología que pide la consigna a.3, 
 - Los rótulos del mapa usan halo blanco también en tema oscuro, porque GeoServer dibuja la imagen sin conocer el tema del visor.
 - [PENDIENTE] Consultar al profesor si la capa Relevamientos debe estar en PostGIS y servida por GeoServer.
 
-## 6.18 19/11/2026 — Unión en develop de las ramas del visor y de la carga IGN
+## 6.19 19/11/2026 — Unión en develop de las ramas del visor y de la carga IGN
 
 *Vazquez Maximo Ezequiel · Decisiones: ADR-0015, ADR-0016*
 
@@ -1133,7 +1201,8 @@ Tabla: Riesgos identificados
 - El usuario confirmó el acceso autenticado al visor con Google y la visualización del mapa base.
 - Las 47 capas del ZIP IGN están cargadas en el PostGIS local `postgis` (base `sig_ign`) y publicadas por WMS/WFS con su simbología (ADR-0014, ADR-0015). Los volúmenes locales no se distribuyen con el repositorio: cada integrante corre `python scripts/cargar_capas_ign.py` con el ZIP.
 - Quien tenga el volumen `datos_gis` del servicio `gisdb` (rama anterior) tiene que volver a cargar las capas con el script; ese volumen ya no se usa.
-- [PENDIENTE] Conectar Django al PostGIS del proyecto para alimentar el panel y realizar los cálculos geográficos.
+- Django lee el análisis de la RN 11 desde PostGIS (`apps/administracion/postgis.py`). El cálculo se hace con `scripts/analisis_rn11.py` (ADR-0017).
+- [PENDIENTE] Revisar con el grupo el informe del punto b (`docs/tpi/punto-b/salida/informe-punto-b.pdf`) y el video antes de la entrega.
 - La carga de elementos usa WFS-T sobre `elementos_relevados` en PostGIS, servida por GeoServer (ADR-0016): la capa queda en PostGIS, que era la duda abierta sobre Relevamientos.
 
 # 8 Glosario

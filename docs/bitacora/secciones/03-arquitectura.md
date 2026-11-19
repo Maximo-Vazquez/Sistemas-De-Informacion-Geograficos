@@ -32,8 +32,9 @@ Tabla: Tecnologías en uso
 | Servidor de mapas | GeoServer (Docker) | 2.27.2 | Servicios WMS y WFS de las capas (ADR-0008) |
 | Biblioteca de mapas | OpenLayers | 10.6.1 | Visor web de Administración (ADR-0009) |
 | Listas ordenables | dnd-kit | 6.3.1 | Orden de las capas en el visor |
+| Análisis espacial | SQL de PostGIS + Procesamiento de QGIS (PyQGIS) | 3.5 / 4.2.2 | Punto b: traza, áreas, población y puentes (ADR-0017) |
 | Estilos de capas | SLD 1.0 (`scripts/simbologia_ign.py`) | — | Simbología y leyenda por clases de las 47 capas (ADR-0014) |
 
 ## Componentes previstos
 
-- Conexión de Django a PostGIS para los cálculos del panel sobre la RN 11.
+- Mapa A4 del punto c a partir de las capas `rn11_*` del esquema `analisis`.

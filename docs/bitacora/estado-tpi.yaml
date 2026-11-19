@@ -13,8 +13,8 @@
   referencia: ADR-0009, ADR-0014, ADR-0016
 - id: b
   descripcion: Análisis de la RN 11 en el Chaco (km, población a 10 y 20 km, puentes) e informe
-  estado: pendiente
-  referencia: ADR-0006
+  estado: completa
+  referencia: ADR-0006, ADR-0017
 - id: c
   descripcion: Mapa A4 en PDF con la traza, áreas de influencia, puentes y accidentes naturales
   estado: pendiente
