@@ -29,9 +29,13 @@ encabezado:
   - Visor SIG Chaco
   - Informe del punto b
 
-version: 1.0.0
+version: 1.1.0
 versiones:
   - version: 1.0.0
     fecha: 2026-11-19
     cambios:
       - Primera versión del informe con las tres respuestas, la metodología en PostGIS y QGIS, figuras y referencias
+  - version: 1.1.0
+    fecha: 2026-11-19
+    cambios:
+      - Versión resumida y en lenguaje más simple, con el código de QGIS de cada paso; el análisis se hace solo en QGIS (sin la repetición en SQL)

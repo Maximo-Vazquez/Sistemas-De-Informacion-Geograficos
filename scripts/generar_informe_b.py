@@ -1,18 +1,17 @@
 """Genera el informe del punto b (Markdown y PDF) con los números del análisis en PostGIS.
 
-Completa los marcadores {{...}} de docs/tpi/punto-b/informe.md con analisis.rn11_* y con la
-validación de QGIS (docs/tpi/punto-b/qgis/validacion.json), baja de GeoServer los mapas de
-contexto y arma el PDF con la plantilla y el estilo de la bitácora.
+Completa los marcadores {{...}} de docs/tpi/punto-b/informe.md con analisis.rn11_* (que genera
+QGIS), baja de GeoServer los mapas de contexto y arma el PDF con la plantilla y el estilo de la
+bitácora.
 
     python scripts/generar_informe_b.py            # salida/informe-punto-b.md y .pdf
     python scripts/generar_informe_b.py --solo-md  # sin PDF (no requiere WeasyPrint)
 
-Requiere haber corrido scripts/analisis_rn11.py y scripts/analisis_rn11_qgis.py, y tener
-PostGIS y GeoServer en marcha.
+Requiere haber corrido scripts/analisis_rn11_qgis.py y scripts/publicar_analisis_rn11.py, y
+tener PostGIS y GeoServer en marcha.
 """
 
 import argparse
-import json
 import re
 import sys
 import urllib.parse
@@ -40,7 +39,7 @@ CAPAS_MAPA = ["provincias", "curso_de_agua_hid", "rn11_areas", "red_vial", "rn11
 MARCADOR = re.compile(r"\{\{(\w+)\}\}")
 FIGURA = re.compile(r"<p>Figura: (.*?)</p>")
 CSS_EXTRA = """
-.cuerpo img, img { display: block; max-width: 100%; max-height: 19cm; margin: 0.4cm auto 0.15cm; }
+.cuerpo img, img { display: block; max-width: 100%; max-height: 11cm; margin: 0.4cm auto 0.15cm; }
 p.leyenda.figura { text-align: center; }
 pre { white-space: pre-wrap; font-size: 8.5pt; }
 """
@@ -95,19 +94,6 @@ def bajar_mapa(nombre: str, caja: dict, ancho: int = 1800):
 
 def tablas(datos: dict) -> dict[str, str]:
     r = datos["resumen"]
-    validacion = json.loads((INFORME / "qgis" / "validacion.json").read_text(encoding="utf-8"))["resultados"]
-    etiquetas = {"km_traza": "Km de traza", "poblacion_0_10": "Población hasta 10 km",
-                 "poblacion_10_20": "Población de 10 a 20 km", "localidades_0_10": "Localidades hasta 10 km",
-                 "localidades_10_20": "Localidades de 10 a 20 km", "puentes": "Puentes"}
-    decimales = {"km_traza": 2}
-
-    def fila_localidad(f):
-        habitantes = numero(f["habitantes"]) if f["con_dato"] else "Sin dato"
-        return [f["nombre"], f["tipo"], f["departamento"] or "—", numero(f["distancia_km"], 1), habitantes]
-
-    def localidades(condicion):
-        return tabla(["Localidad", "Tipo", "Departamento", "Distancia (km)", "Habitantes"],
-                     [fila_localidad(f) for f in datos["localidades"] if condicion(f)])
 
     return {
         "tabla_resumen": tabla(["Pregunta", "Respuesta"], [
@@ -117,11 +103,6 @@ def tablas(datos: dict) -> dict[str, str]:
             ["Población de 10 a 20 km",
              f"**{numero(r['poblacion_10_20'])} habitantes** ({r['localidades_10_20']} localidades)"],
             ["Puentes sobre la traza", f"**{r['puentes']} puentes** (detalle en la sección de resultados)"],
-        ]),
-        "tabla_validacion": tabla(["Dato", "PostGIS", "QGIS", "Coincide"], [
-            [etiquetas[k], numero(r[k], decimales.get(k, 0)), numero(v, decimales.get(k, 0)),
-             "Sí" if abs(float(v) - float(r[k])) < 0.05 else "**No**"]
-            for k, v in validacion.items()
         ]),
         "tabla_poblacion": tabla(["Categoría", "Localidades", "Con dato de población", "Habitantes"], [
             ["Hasta 10 km", r["localidades_0_10"],
@@ -133,16 +114,14 @@ def tablas(datos: dict) -> dict[str, str]:
             ["**Total**", r["localidades_0_10"] + r["localidades_10_20"], r["localidades_con_dato"],
              f"**{numero(r['poblacion_0_10'] + r['poblacion_10_20'])}**"],
         ]),
-        "tabla_localidades_10": localidades(lambda f: f["en_chaco"] and f["categoria"] == "0 a 10 km"),
-        "tabla_localidades_20": localidades(lambda f: f["en_chaco"] and f["categoria"] == "10 a 20 km"),
-        "tabla_fuera": tabla(["Localidad", "Provincia", "Distancia (km)", "Habitantes"], [
-            [f["nombre"], f["provincia"], numero(f["distancia_km"], 1),
-             numero(f["habitantes"]) if f["con_dato"] else "Sin dato"]
-            for f in datos["localidades"] if not f["en_chaco"]
+        "tabla_localidades": tabla(["Localidad", "Categoría", "Distancia (km)", "Habitantes"], [
+            [f["nombre"], "Hasta 10 km" if f["categoria"] == "0 a 10 km" else "De 10 a 20 km",
+             numero(f["distancia_km"], 1), numero(f["habitantes"])]
+            for f in datos["localidades"] if f["en_chaco"] and f["con_dato"]
         ]),
-        "tabla_puentes": tabla(["N.º", "Km de la traza", "Curso de agua", "Régimen", "Localidad cercana"], [
+        "tabla_puentes": tabla(["N.º", "Km", "Curso de agua", "Localidad cercana"], [
             [p["numero"], numero(p["km_traza"], 1), p["curso_de_agua"] or "Sin curso cartografiado",
-             p["regimen"] or "—", f"{p['localidad_cercana']} ({numero(p['distancia_localidad_km'], 1)} km)"]
+             p["localidad_cercana"]]
             for p in datos["puentes"]
         ]),
     }
@@ -158,11 +137,9 @@ def valores(datos: dict) -> dict[str, str]:
         "poblacion_fuera": numero(r["poblacion_fuera_del_chaco"]),
         "localidades_con_dato": str(r["localidades_con_dato"]),
         "localidades_total": str(r["localidades_0_10"] + r["localidades_10_20"]),
+        "localidades_sin_dato": str(r["localidades_0_10"] + r["localidades_10_20"] - r["localidades_con_dato"]),
         "puentes": str(r["puentes"]),
         "cruces": str(r["cruces_con_cursos_de_agua"]),
-        "km_ultimo_puente": numero(datos["puentes"][-1]["km_traza"], 1),
-        "area_10_km2": numero(datos["areas"]["0 a 10 km"]),
-        "area_10_20_km2": numero(datos["areas"]["10 a 20 km"]),
         **tablas(datos),
     }
 

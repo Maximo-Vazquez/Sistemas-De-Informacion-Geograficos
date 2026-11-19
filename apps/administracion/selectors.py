@@ -1,6 +1,6 @@
 """Lecturas para el panel de resultados y el visor.
 
-Los números del panel salen del análisis de la RN 11 (scripts/analisis_rn11.py, ADR-0017), que
+Los números del panel salen del análisis de la RN 11 (scripts/analisis_rn11_qgis.py, ADR-0017), que
 deja sus tablas en el esquema `analisis` de PostGIS. Si el análisis no corrió, el panel muestra
 cada sección vacía con la instrucción para generarlo.
 """

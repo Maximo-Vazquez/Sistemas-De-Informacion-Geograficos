@@ -13,12 +13,13 @@ La consigna b pide el largo de la RN 11 en el Chaco, la población a 10 km y de 
 
 - Hacer el análisis solo en QGIS, a mano, con capturas.
 - Hacerlo en PostGIS con SQL, repetirlo en QGIS para validar y generar el informe a partir de las tablas resultantes.
+- Hacerlo con QGIS como script (PyQGIS), guardar los resultados en PostGIS y generar el informe a partir de esas tablas.
 - Para los puentes: contar los puntos a cierta distancia de la traza, o pedir además que el camino más cercano sea la RN 11.
 - Para la población: incluir todas las localidades dentro de los buffers, o solo las del Chaco.
 
 ## Decisión
 
-- El análisis se calcula en PostGIS (`scripts/analisis_rn11.sql` y `analisis_rn11.py`, esquema `analisis`) y se repite con algoritmos de Procesamiento de QGIS (`scripts/analisis_rn11_qgis.py`), que compara cada número con PostGIS.
+- El análisis se hace con algoritmos de Procesamiento de QGIS (`scripts/analisis_rn11_qgis.py`), que guarda los resultados en el esquema `analisis` de PostGIS; `scripts/publicar_analisis_rn11.py` los publica en GeoServer. Al principio también se calculaba en SQL para validar; como los dos daban lo mismo, se quitó el SQL para no mantener el análisis duplicado.
 - Las medidas se hacen en POSGAR 2007 faja 5 (EPSG:5347).
 - La traza se forma con los tramos `nro_ruta = '11'` y `administra = 'Nacional'` (la RP 11 es otra ruta), recortados al polígono del Chaco.
 - Las categorías se arman con un buffer de 10 km y un anillo de 20 km menos 10 km, recortados al Chaco. La población es la suma de `canthab` (Censo 2001) de las localidades de cada área.
@@ -28,6 +29,6 @@ La consigna b pide el largo de la RN 11 en el Chaco, la población a 10 km y de 
 
 ## Consecuencias
 
-- Resultado: 172,39 km; 360.983 habitantes hasta 10 km y 26.080 de 10 a 20 km; 21 puentes. PostGIS y QGIS coinciden en los seis valores.
-- El análisis se repite con dos comandos y alimenta el visor (capas `rn11_*` en GeoServer), el panel y el informe sin copiar números a mano.
+- Resultado: 172,39 km; 360.983 habitantes hasta 10 km y 26.080 de 10 a 20 km; 21 puentes. El SQL inicial y QGIS coincidían en todas las filas antes de quitar el SQL.
+- El análisis se repite con dos comandos (QGIS y publicación) y alimenta el visor (capas `rn11_*` en GeoServer), el panel y el informe sin copiar números a mano.
 - Limitaciones aceptadas: población del Censo 2001, solo 15 de 36 localidades del Chaco con dato, localidades representadas como puntos, y el cruce del Río de Oro sin punto de puente en la capa del IGN.

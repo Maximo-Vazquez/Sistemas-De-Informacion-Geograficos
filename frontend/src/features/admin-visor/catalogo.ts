@@ -87,7 +87,7 @@ export const tituloDeCapa = (nombre: string, respaldo: string) => TITULOS[nombre
 export const CAPAS_INICIALES = ["localidades", "red_vial", "provincias"]
 
 export const TEMAS: { id: string; titulo: string; capas: string[] }[] = [
-  // Resultado del punto b (scripts/analisis_rn11.py): traza, áreas, localidades y puentes.
+  // Resultado del punto b (scripts/analisis_rn11_qgis.py): traza, áreas, localidades y puentes.
   { id: "tpi", titulo: "Obra RN 11", capas: ["rn11_puentes", "rn11_localidades", "rn11_chaco", "rn11_areas", "red_vial", "curso_de_agua_hid", "provincias"] },
   { id: "hidrografia", titulo: "Hidrografía", capas: ["localidades", "curso_de_agua_hid", "espejo_de_agua_hid", "isla", "provincias"] },
   { id: "transporte", titulo: "Transporte", capas: ["localidades", "puente_red_vial_puntos", "red_vial", "vias_secundarias", "red_ferroviaria", "provincias"] },

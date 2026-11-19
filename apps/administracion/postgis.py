@@ -1,6 +1,6 @@
 """Lectura de solo consulta en el PostGIS de las capas (servicio `postgis`, ADR-0015).
 
-Django no usa GeoDjango: el análisis se calcula en PostGIS con scripts/analisis_rn11.py y acá solo
+Django no usa GeoDjango: el análisis lo calcula QGIS (scripts/analisis_rn11_qgis.py) y lo guarda en PostGIS; acá solo
 se leen sus tablas. Si la base no responde o el análisis no corrió, `consultar` devuelve None y la
 pantalla muestra su estado vacío.
 """

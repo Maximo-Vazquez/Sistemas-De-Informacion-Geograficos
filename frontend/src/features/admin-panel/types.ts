@@ -6,7 +6,7 @@ export type PanelGrafico = { id: string; titulo: string; descripcion: string }
 
 export type Categoria = "0 a 10 km" | "10 a 20 km"
 
-// Filas del esquema `analisis` de PostGIS (scripts/analisis_rn11.sql).
+// Filas del esquema `analisis` de PostGIS (scripts/analisis_rn11_qgis.py).
 export type LocalidadAfectada = {
   nombre: string
   tipo: string

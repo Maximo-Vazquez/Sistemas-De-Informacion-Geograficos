@@ -1,14 +1,13 @@
-"""Análisis del punto b: la RN 11 en la Provincia del Chaco (ADR-0017).
+"""Publica en GeoServer los resultados del punto b: la RN 11 en la Provincia del Chaco (ADR-0017).
 
-Ejecuta scripts/analisis_rn11.sql en PostGIS (esquema `analisis`), imprime el resumen y publica
-en GeoServer las capas de la traza, las áreas de influencia, las localidades y los puentes, cada
-una con su simbología.
+El análisis lo hace QGIS (scripts/analisis_rn11_qgis.py), que guarda las capas en el esquema
+`analisis` de PostGIS. Este script las publica en GeoServer (traza, áreas de influencia,
+localidades y puentes), cada una con su simbología, e imprime el resumen.
 
-    python scripts/analisis_rn11.py               # analiza y publica
-    python scripts/analisis_rn11.py --sin-publicar
+    python scripts/publicar_analisis_rn11.py
 
-Requiere los servicios `postgis` y `geoserver` en marcha y las capas del IGN cargadas
-(scripts/cargar_capas_ign.py). Se puede repetir: recrea el esquema y actualiza los estilos.
+Requiere los servicios `postgis` y `geoserver` en marcha. Se puede repetir: vuelve a publicar las
+capas y actualiza los estilos.
 """
 
 import argparse
@@ -19,7 +18,6 @@ import sys
 from cargar_capas_ign import CLAVE, DB, ESPACIO, RAIZ, USUARIO, geoserver
 from simbologia_ign import Clase, Estilo, linea, poligono, punto, sld, texto
 
-SQL = RAIZ / "scripts" / "analisis_rn11.sql"
 ALMACEN = "analisis"
 TIPO_SLD = "application/vnd.ogc.sld+xml"
 
@@ -50,19 +48,21 @@ CAPAS = {
 CONSULTA_RESUMEN = "SELECT row_to_json(r) FROM analisis.rn11_resumen r"
 
 
-def psql(*argumentos: str, entrada: str | None = None) -> str:
+def psql(*argumentos: str) -> str:
     comando = ["docker", "compose", "exec", "-T", "postgis", "psql", "-U", USUARIO, "-d", DB,
                "-v", "ON_ERROR_STOP=1", "-q", *argumentos]
-    resultado = subprocess.run(comando, cwd=RAIZ, input=entrada, capture_output=True, text=True,
+    resultado = subprocess.run(comando, cwd=RAIZ, capture_output=True, text=True,
                                encoding="utf-8")
     if resultado.returncode != 0:
         sys.exit(f"PostGIS devolvió un error:\n{resultado.stderr.strip()}")
     return resultado.stdout
 
 
-def analizar() -> dict:
-    psql(entrada=SQL.read_text(encoding="utf-8"))
-    return json.loads(psql("-At", "-c", CONSULTA_RESUMEN))
+def leer_resumen() -> dict:
+    salida = psql("-At", "-c", CONSULTA_RESUMEN).strip()
+    if not salida:
+        sys.exit("No hay resultados en analisis.rn11_resumen: correr antes scripts/analisis_rn11_qgis.py.")
+    return json.loads(salida)
 
 
 def crear_almacen():
@@ -82,7 +82,7 @@ def publicar():
     tipos = f"workspaces/{ESPACIO}/datastores/{ALMACEN}/featuretypes"
     estilos = f"workspaces/{ESPACIO}/styles"
     for capa, (titulo, estilo) in CAPAS.items():
-        # Las tablas se recrean en cada corrida: se vuelve a publicar para que GeoServer relea el esquema.
+        # QGIS recrea las tablas en cada corrida: se vuelve a publicar para que GeoServer relea el esquema.
         if geoserver("GET", f"{tipos}/{capa}") == 200:
             geoserver("DELETE", f"layers/{ESPACIO}:{capa}")
             geoserver("DELETE", f"{tipos}/{capa}")
@@ -110,14 +110,9 @@ def mostrar(resumen: dict):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--sin-publicar", action="store_true", help="solo recalcula en PostGIS")
-    args = parser.parse_args()
-    resumen = analizar()
-    if resumen["partes_traza"] != 1:
-        sys.exit("La traza quedó partida en varias líneas: revisar los tramos de red_vial.")
-    if not args.sin_publicar:
-        publicar()
+    argparse.ArgumentParser(description=__doc__.splitlines()[0]).parse_args()
+    resumen = leer_resumen()
+    publicar()
     mostrar(resumen)
 
 

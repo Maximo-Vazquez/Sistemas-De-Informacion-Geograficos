@@ -580,12 +580,13 @@ La consigna b pide el largo de la RN 11 en el Chaco, la población a 10 km y de 
 
 - Hacer el análisis solo en QGIS, a mano, con capturas.
 - Hacerlo en PostGIS con SQL, repetirlo en QGIS para validar y generar el informe a partir de las tablas resultantes.
+- Hacerlo con QGIS como script (PyQGIS), guardar los resultados en PostGIS y generar el informe a partir de esas tablas.
 - Para los puentes: contar los puntos a cierta distancia de la traza, o pedir además que el camino más cercano sea la RN 11.
 - Para la población: incluir todas las localidades dentro de los buffers, o solo las del Chaco.
 
 ### Decisión
 
-- El análisis se calcula en PostGIS (`scripts/analisis_rn11.sql` y `analisis_rn11.py`, esquema `analisis`) y se repite con algoritmos de Procesamiento de QGIS (`scripts/analisis_rn11_qgis.py`), que compara cada número con PostGIS.
+- El análisis se hace con algoritmos de Procesamiento de QGIS (`scripts/analisis_rn11_qgis.py`), que guarda los resultados en el esquema `analisis` de PostGIS; `scripts/publicar_analisis_rn11.py` los publica en GeoServer. Al principio también se calculaba en SQL para validar; como los dos daban lo mismo, se quitó el SQL para no mantener el análisis duplicado.
 - Las medidas se hacen en POSGAR 2007 faja 5 (EPSG:5347).
 - La traza se forma con los tramos `nro_ruta = '11'` y `administra = 'Nacional'` (la RP 11 es otra ruta), recortados al polígono del Chaco.
 - Las categorías se arman con un buffer de 10 km y un anillo de 20 km menos 10 km, recortados al Chaco. La población es la suma de `canthab` (Censo 2001) de las localidades de cada área.
@@ -595,8 +596,8 @@ La consigna b pide el largo de la RN 11 en el Chaco, la población a 10 km y de 
 
 ### Consecuencias
 
-- Resultado: 172,39 km; 360.983 habitantes hasta 10 km y 26.080 de 10 a 20 km; 21 puentes. PostGIS y QGIS coinciden en los seis valores.
-- El análisis se repite con dos comandos y alimenta el visor (capas `rn11_*` en GeoServer), el panel y el informe sin copiar números a mano.
+- Resultado: 172,39 km; 360.983 habitantes hasta 10 km y 26.080 de 10 a 20 km; 21 puentes. El SQL inicial y QGIS coincidían en todas las filas antes de quitar el SQL.
+- El análisis se repite con dos comandos (QGIS y publicación) y alimenta el visor (capas `rn11_*` en GeoServer), el panel y el informe sin copiar números a mano.
 - Limitaciones aceptadas: población del Censo 2001, solo 15 de 36 localidades del Chaco con dato, localidades representadas como puntos, y el cruce del Río de Oro sin punto de puente en la capa del IGN.
 
 # 6 Bitácora de trabajo
@@ -1091,11 +1092,12 @@ Resolver la consigna b: largo de la RN 11 en el Chaco, población afectada a 10 
 
 ### Trabajo realizado
 
-- `scripts/analisis_rn11.sql` y `analisis_rn11.py`: esquema `analisis` en PostGIS con la traza, las áreas, las localidades, los puentes, los cruces con cursos de agua y un resumen. Publica `rn11_chaco`, `rn11_areas`, `rn11_localidades` y `rn11_puentes` en GeoServer con su simbología.
-- `scripts/analisis_rn11_qgis.py`: los mismos pasos con algoritmos de Procesamiento de QGIS 4.2.2 (PyQGIS sin interfaz), figuras de cada paso, el proyecto `docs/tpi/punto-b/qgis/rn11.qgz` y `validacion.json`.
+- `scripts/analisis_rn11_qgis.py`: el análisis con algoritmos de Procesamiento de QGIS 4.2.2 (PyQGIS sin interfaz). Guarda la traza, las áreas, las localidades, los puentes y un resumen en el esquema `analisis` de PostGIS, y genera las figuras de cada paso y el proyecto `docs/tpi/punto-b/qgis/rn11.qgz`.
+- `scripts/publicar_analisis_rn11.py`: publica `rn11_chaco`, `rn11_areas`, `rn11_localidades` y `rn11_puentes` en GeoServer con su simbología.
+- Al principio el análisis también se hizo en SQL (PostGIS) para validar QGIS. Los dos daban los mismos números, así que se dejó solo QGIS, que es la herramienta de la materia y la que muestra los pasos.
 - Panel de Administración con indicadores, dona de población y tablas de localidades y puentes, leídos de PostGIS (`apps/administracion/postgis.py`). En el visor, grupo "Análisis RN 11" y tema rápido "Obra RN 11".
 - Informe `docs/tpi/punto-b/salida/informe-punto-b.pdf`, generado con `scripts/generar_informe_b.py` y el estilo de la bitácora: metodología con SQL y figuras, tablas, validación, limitaciones y referencias.
-- Video `videos/03-analisis-rn11/` (unos 2 min 20 s, narrado con Gemini TTS) con un mapa SVG animado exportado de PostGIS. La carpeta `videos/` no se versiona.
+- Video `videos/03-analisis-rn11/` (alrededor de 1 min, narrado con Gemini TTS) con un mapa SVG animado exportado de PostGIS. La carpeta `videos/` no se versiona.
 
 ### Problemas y soluciones
 
@@ -1107,7 +1109,7 @@ Resolver la consigna b: largo de la RN 11 en el Chaco, población afectada a 10 
 
 ### Verificación
 
-- PostGIS y QGIS coinciden: 172,39 km; 360.983 y 26.080 habitantes; 21 y 15 localidades; 21 puentes.
+- Resultados: 172,39 km; 360.983 y 26.080 habitantes; 21 y 15 localidades; 21 puentes. Antes de quitar el SQL, las tablas de QGIS se compararon fila por fila con las del SQL: iguales, con geometrías a menos de 21 cm.
 - `ruff check .`, 23 tests de Django, `typecheck`, `build` y `check:colores` en verde. Playwright: 15 pruebas en verde y 4 capturas del punto b.
 
 ### Pendientes
@@ -1201,7 +1203,7 @@ Tabla: Riesgos identificados
 - El usuario confirmó el acceso autenticado al visor con Google y la visualización del mapa base.
 - Las 47 capas del ZIP IGN están cargadas en el PostGIS local `postgis` (base `sig_ign`) y publicadas por WMS/WFS con su simbología (ADR-0014, ADR-0015). Los volúmenes locales no se distribuyen con el repositorio: cada integrante corre `python scripts/cargar_capas_ign.py` con el ZIP.
 - Quien tenga el volumen `datos_gis` del servicio `gisdb` (rama anterior) tiene que volver a cargar las capas con el script; ese volumen ya no se usa.
-- Django lee el análisis de la RN 11 desde PostGIS (`apps/administracion/postgis.py`). El cálculo se hace con `scripts/analisis_rn11.py` (ADR-0017).
+- Django lee el análisis de la RN 11 desde PostGIS (`apps/administracion/postgis.py`). El cálculo se hace en QGIS con `scripts/analisis_rn11_qgis.py` (ADR-0017).
 - [PENDIENTE] Revisar con el grupo el informe del punto b (`docs/tpi/punto-b/salida/informe-punto-b.pdf`) y el video antes de la entrega.
 - La carga de elementos usa WFS-T sobre `elementos_relevados` en PostGIS, servida por GeoServer (ADR-0016): la capa queda en PostGIS, que era la duda abierta sobre Relevamientos.
 

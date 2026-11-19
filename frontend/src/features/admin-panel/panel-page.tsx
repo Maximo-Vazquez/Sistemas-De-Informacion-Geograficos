@@ -8,7 +8,7 @@ import { useDjangoMessages } from "@/lib/use-django-messages"
 import { TablaLocalidades, TablaPuentes } from "./tablas-rn11"
 import type { AnalisisRn11, PanelData, PanelGrafico } from "./types"
 
-const SIN_DATOS = "Se completa al correr el análisis: python scripts/analisis_rn11.py"
+const SIN_DATOS = "Se completa al correr el análisis en QGIS: scripts/analisis_rn11_qgis.py"
 
 function valorIndicador(id: string, valor: number | null) {
   if (valor === null) return "—"

@@ -17,7 +17,7 @@ test.describe("Sin sesión", () => {
 test.describe("Con sesión", () => {
   test.use(conSesion)
 
-  // Lee el análisis de PostGIS (python scripts/analisis_rn11.py); sin él, el panel queda vacío.
+  // Lee el análisis de PostGIS (scripts/analisis_rn11_qgis.py); sin él, el panel queda vacío.
   test("el panel muestra los resultados del análisis de la RN 11", async ({ page }) => {
     await page.goto("/administracion/")
     await expect(page.getByRole("heading", { level: 1, name: "Panel" })).toBeVisible()

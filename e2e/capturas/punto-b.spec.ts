@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test"
 import { archivoSesion, raizProyecto } from "../utilidades/django"
 
 // Capturas del punto b para el informe: panel con los resultados y visor con el tema "Obra RN 11".
-// Necesita el análisis en PostGIS (python scripts/analisis_rn11.py) y GeoServer en marcha.
+// Necesita el análisis en PostGIS (scripts/analisis_rn11_qgis.py y publicar_analisis_rn11.py) y GeoServer en marcha.
 // Uso: pnpm --dir e2e exec playwright test --project=capturas punto-b
 const destino = path.join(raizProyecto, "docs", "tpi", "punto-b", "figuras")
 const TAM = { width: 1440, height: 900 }
