@@ -45,7 +45,9 @@ SELECT 2, '10 a 20 km',
 FROM buffers b CROSS JOIN chaco c;
 
 -- Paso 4. Localidades a 20 km o menos de la traza, con su categoría por distancia. Las de otras
--- provincias se guardan como contexto (en_chaco = false) y no suman a la población afectada.
+-- provincias se guardan como contexto (en_chaco = false) y no suman a la población afectada. La
+-- provincia sale del atributo y no del polígono: sobre el río Bermejo, que es el límite, el punto de
+-- General Lucio V. Mansilla (Formosa) cae dentro del polígono del Chaco.
 CREATE TABLE analisis.rn11_localidades AS
 SELECT row_number() OVER (ORDER BY d.distancia)::int AS gid,
        l.nombre, l.tipo, l.departamen AS departamento, l.provincia,
@@ -53,8 +55,8 @@ SELECT row_number() OVER (ORDER BY d.distancia)::int AS gid,
        l.canthab IS NOT NULL AND l.canthab > 0 AS con_dato,
        round((d.distancia / 1000)::numeric, 2) AS distancia_km,
        CASE WHEN d.distancia <= 10000 THEN '0 a 10 km' ELSE '10 a 20 km' END::varchar(20) AS categoria,
-       ST_Intersects(ST_Transform(l.geom, 5347), c.g) AS en_chaco,
-       CASE WHEN NOT ST_Intersects(ST_Transform(l.geom, 5347), c.g) THEN 'Fuera del Chaco'
+       l.provincia = 'Chaco' AS en_chaco,
+       CASE WHEN l.provincia IS DISTINCT FROM 'Chaco' THEN 'Fuera del Chaco'
             WHEN d.distancia <= 10000 THEN '0 a 10 km' ELSE '10 a 20 km' END::varchar(20) AS clase,
        ST_Multi(l.geom)::geometry(MultiPoint, 4326) AS geom
 FROM public.localidades l

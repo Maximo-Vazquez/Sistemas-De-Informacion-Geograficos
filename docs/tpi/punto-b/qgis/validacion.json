@@ -1,0 +1,11 @@
+{
+  "qgis": "4.2.2-Belém do Pará",
+  "resultados": {
+    "km_traza": 172.39,
+    "poblacion_0_10": 360983,
+    "poblacion_10_20": 26080,
+    "localidades_0_10": 21,
+    "localidades_10_20": 15,
+    "puentes": 21
+  }
+}

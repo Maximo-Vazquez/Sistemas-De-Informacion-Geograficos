@@ -1,0 +1,37 @@
+# Ficha del informe del punto b (mismo formato que docs/bitacora/documento.yaml).
+titulo_proyecto: Visor SIG Chaco
+nombre_documento: Informe del punto b – RN 11 en la Provincia del Chaco
+entregable: Trabajo Práctico Integrador – consigna b
+organizacion:
+  - Universidad Tecnológica Nacional – Facultad Regional Resistencia
+  - French 414, Resistencia, Chaco, Argentina.
+autor: Vazquez Maximo Ezequiel
+responsables:
+  - Ing. Ilse Hodapp
+  - Ing. Rodrigo Valdés
+integrantes:
+  - Vazquez Maximo Ezequiel
+  - "[PENDIENTE] completar el resto del grupo (4 a 5 integrantes)"
+area: Sistemas de Información Geográfica – Ingeniería en Sistemas de Información
+
+portada:
+  organizacion:
+    - Universidad Tecnológica Nacional
+    - Facultad Regional Resistencia
+  titulo: Ruta Nacional 11 en el Chaco
+  subtitulo: Informe del punto b
+  descripcion: Longitud de la traza, población afectada y puentes para las obras de mantenimiento
+  pie:
+    - Sistemas de Información Geográfica – Electiva de 4° nivel
+    - Ingeniería en Sistemas de Información – Ciclo 2026
+
+encabezado:
+  - Visor SIG Chaco
+  - Informe del punto b
+
+version: 1.0.0
+versiones:
+  - version: 1.0.0
+    fecha: 2026-11-19
+    cambios:
+      - Primera versión del informe con las tres respuestas, la metodología en PostGIS y QGIS, figuras y referencias

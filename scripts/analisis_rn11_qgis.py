@@ -9,6 +9,7 @@ Usa el Python de QGIS (no el .venv). Lee PostGIS en localhost:5433 y necesita ha
 antes scripts/analisis_rn11.py, porque compara contra analisis.rn11_resumen.
 """
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -16,6 +17,7 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent.parent
 sys.path.append(os.environ.get("QGIS_PLUGINS", r"D:\qgis\apps\qgis\python\plugins"))
 
+from qgis.core import Qgis as QGis  # noqa: E402
 from qgis.core import (  # noqa: E402
     QgsApplication,
     QgsCoordinateReferenceSystem,
@@ -117,8 +119,11 @@ def analizar():
                     OVERLAY=b10)
 
     print("Paso 4. Localidades dentro de cada área (selección por ubicación)")
-    localidades = correr("native:reprojectlayer", "Localidades (POSGAR)",
-                         INPUT=capa_postgis("public", "localidades", "Localidades"), TARGET_CRS=POSGAR)
+    # La provincia sale del atributo: sobre el río Bermejo el polígono no basta (ver analisis_rn11.sql).
+    del_chaco = correr("native:extractbyattribute", "Localidades del Chaco",
+                       INPUT=capa_postgis("public", "localidades", "Localidades"), FIELD="provincia",
+                       OPERATOR=0, VALUE="Chaco")
+    localidades = correr("native:reprojectlayer", "Localidades (POSGAR)", INPUT=del_chaco, TARGET_CRS=POSGAR)
     loc10 = correr("native:extractbylocation", "Localidades hasta 10 km", INPUT=localidades,
                    PREDICATE=[6], INTERSECT=area10)
     loc20 = correr("native:extractbylocation", "Localidades de 10 a 20 km", INPUT=localidades,
@@ -165,6 +170,10 @@ def comparar(resultado):
         igual = abs(float(valor) - float(esperado)) < 0.05
         diferencias += not igual
         print(f"  {clave:<20} QGIS {valor:>10}   PostGIS {esperado:>10}   {'OK' if igual else 'DIFERENCIA'}")
+    # El informe (scripts/generar_informe_b.py) arma su tabla de validación con este archivo.
+    CARPETA_QGIS.mkdir(parents=True, exist_ok=True)
+    (CARPETA_QGIS / "validacion.json").write_text(json.dumps(
+        {"qgis": QGis.version(), "resultados": resultado}, ensure_ascii=False, indent=2), encoding="utf-8")
     return diferencias
 
 
