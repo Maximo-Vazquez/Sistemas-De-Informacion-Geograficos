@@ -30,7 +30,7 @@ encabezado:
   - Bitácora técnica
 
 # SemVer: major al cerrar una entrega, minor por contenido nuevo, patch por correcciones.
-version: 0.7.0
+version: 0.13.0
 versiones:
   - version: 0.1.0
     fecha: 2026-10-22
@@ -57,17 +57,58 @@ versiones:
       - GeoServer en Docker como servidor de mapas (ADR-0008)
       - OpenLayers y primera versión del visor (ADR-0009)
   - version: 0.5.0
-    fecha: 2026-10-29
+    fecha: 2026-11-12
     cambios:
-      - PostGIS en Docker con las 47 capas del SIG IGN 250 (ADR-0010)
-      - Capas publicadas en GeoServer
+      - Revisión de cumplimiento del apartado a con evidencia de código y servicios locales
+      - Guía de configuración OAuth de Google y aclaración del entorno Docker
+      - Creación del espacio local ign y comprobación de servicios WMS y WFS sin capas
   - version: 0.6.0
-    fecha: 2026-10-29
+    fecha: 2026-11-12
     cambios:
-      - Visor con consulta por punto y área, medición, carga de elementos y leyenda con clases (ADR-0011)
-      - Pruebas de navegador del visor
+      - Configuración de credenciales OAuth reales en el entorno local y el contenedor Django
+      - Verificación del inicio OAuth por POST con CSRF y redirección a Google
+  - version: 0.6.1
+    fecha: 2026-11-12
+    cambios:
+      - Corrección del arranque local para servir los archivos estáticos desde Compose
+      - Confirmación del usuario del acceso autenticado al visor y visualización del mapa base
   - version: 0.7.0
-    fecha: 2026-10-30
+    fecha: 2026-11-13
     cambios:
-      - Visor con capas en el mapa, catálogo de capas y temas rápidos
-      - Globo, panel de detalle y tabla de atributos para las consultas
+      - Carga de las 47 capas IGN y sus 570.443 elementos en PostGIS (ADR-0010)
+      - Publicación en GeoServer y verificación individual de WMS, WFS y leyendas
+      - Scripts y documentación para reproducir la importación y la publicación local
+  - version: 0.8.0
+    fecha: 2026-11-13
+    cambios:
+      - Inventario de las 47 capas, sus geometrías, tablas y cantidades
+      - Resumen de los cambios realizados y guía para reproducir la carga en equipo
+  - version: 0.9.0
+    fecha: 2026-11-13
+    cambios:
+      - Propuesta de aplicación, GeoServer y PostGIS compartidos (ADR-0011)
+      - Aclaración de la carga inicial de capas y del acceso sin ZIP para usuarios del visor
+  - version: 0.10.0
+    fecha: 2026-11-17
+    cambios:
+      - Integración de la rama del visor con búsqueda y grupos de capas
+      - Incorporación de medición de distancias y consultas por punto y rectángulo
+      - Actualización de verificaciones y pendientes de las funciones del visor
+  - version: 0.11.0
+    fecha: 2026-11-19
+    cambios:
+      - Alta de geometrías y atributos en la capa vectorial Relevamientos
+      - Retiro de la configuración de despliegue remoto y actualización del arranque local
+  - version: 0.12.0
+    fecha: 2026-11-19
+    cambios:
+      - Simbología por clases de las 47 capas IGN generada por script (ADR-0014)
+      - Leyenda del visor transparente y con el color de texto del tema
+      - Consigna a.3 completa
+  - version: 0.13.0
+    fecha: 2026-11-19
+    cambios:
+      - Unión en develop de las ramas del visor, la carga IGN y la simbología
+      - Visor con catálogo de capas, orden arrastrable, globo, detalle y tabla de atributos
+      - Carga de elementos por WFS-T a través de Django en elementos_relevados (ADR-0016)
+      - Carga única con cargar_capas_ign.py y simbología de las 47 capas (ADR-0015)

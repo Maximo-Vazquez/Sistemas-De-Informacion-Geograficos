@@ -6,7 +6,7 @@ Este documento registra el desarrollo del Trabajo Práctico Integrador (TPI) de 
 
 ## Alcance
 
-Cubre la aplicación web del proyecto (Django y React), la infraestructura (PostgreSQL/PostGIS, servidor de mapas, contenedores y Kubernetes) y el trabajo de análisis y cartografía con QGIS. No reemplaza al informe del punto b ni al mapa del punto c: los referencia.
+Cubre la aplicación web del proyecto (Django y React), los servicios locales (PostgreSQL, PostGIS y GeoServer) y el trabajo de análisis y cartografía con QGIS. Incluye referencias al informe del punto b y al mapa del punto c.
 
 ## Estructura y estándares
 

@@ -1,6 +1,28 @@
-# Servicios de desarrollo. `db`: base de la aplicación Django. `postgis`: capas del SIG IGN 250
-# (ADR-0010), que GeoServer publica por WMS/WFS. Carga: python scripts/cargar_capas_ign.py
+# Servicios de desarrollo (ejecución local, ADR-0012). `db`: base de la aplicación Django.
+# `postgis`: capas del SIG IGN 250 (ADR-0015), que GeoServer publica por WMS/WFS.
+# Carga: python scripts/cargar_capas_ign.py
 services:
+  # Opcional: Django en un contenedor (docker compose --profile web up -d). Sirve los
+  # estáticos compilados; para desarrollar se usa python manage.py runserver.
+  web:
+    profiles: ["web"]
+    image: visor-sig-chaco:latest
+    build: .
+    env_file: .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.local
+      DEBUG: "True"
+      DB_HOST: db
+      # El navegador sigue usando localhost:8085; Django reenvía el WFS-T por la red de Compose.
+      GEOSERVER_URL_INTERNA: http://geoserver:8080/geoserver
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      geoserver:
+        condition: service_healthy
+
   db:
     image: postgres:17
     environment:
@@ -8,7 +30,7 @@ services:
       POSTGRES_USER: visor_sig
       POSTGRES_PASSWORD: visor_sig
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - datos_db:/var/lib/postgresql/data
     healthcheck:
@@ -17,15 +39,17 @@ services:
       timeout: 3s
       retries: 10
 
-  # Base espacial con las capas del IGN (ADR-0010). Desde el host: localhost:5433.
+  # Base espacial con las capas del IGN (ADR-0015). Desde el host: localhost:5433.
   postgis:
     image: postgis/postgis:17-3.5
+    # Esta etiqueta oficial se distribuye para amd64; Docker Desktop ARM la emula.
+    platform: linux/amd64
     environment:
       POSTGRES_DB: sig_ign
       POSTGRES_USER: sig_ign
       POSTGRES_PASSWORD: ${POSTGIS_PASSWORD:-sig_ign}
     ports:
-      - "${POSTGIS_PORT:-5433}:5432"
+      - "127.0.0.1:${POSTGIS_PORT:-5433}:5432"
     volumes:
       - datos_postgis:/var/lib/postgresql/data
     healthcheck:
@@ -45,7 +69,7 @@ services:
       CORS_ALLOWED_ORIGINS: "*"
       SKIP_DEMO_DATA: "true"
     ports:
-      - "${GEOSERVER_PORT:-8085}:8080"
+      - "127.0.0.1:${GEOSERVER_PORT:-8085}:8080"
     volumes:
       - datos_geoserver:/opt/geoserver_data
     depends_on:

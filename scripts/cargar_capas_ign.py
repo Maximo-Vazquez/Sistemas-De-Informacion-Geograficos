@@ -6,8 +6,9 @@ oficial de GDAL (ogr2ogr) dentro de la red de Compose, así que no hace falta in
     python scripts/cargar_capas_ign.py              # carga y publica todas las capas
     python scripts/cargar_capas_ign.py --solo-publicar   # publica capas y estilos sin recargar
 
-También crea la capa editable `elementos_relevados` (carga de elementos desde el visor) y sube
-los estilos con clases de `geoserver/estilos/` a las capas del TPI.
+También crea la capa editable `elementos_relevados` (carga de elementos desde el visor) y aplica
+la simbología: las 47 capas del IGN con los SLD que genera `scripts/simbologia_ign.py` (ADR-0014) y
+la capa editable con `geoserver/estilos/visor_elementos_relevados.sld`.
 
 Es idempotente: vuelve a crear cada tabla (-overwrite) y salta las capas ya publicadas.
 """
@@ -24,6 +25,9 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
+from simbologia_ign import ESTILOS as SIMBOLOGIA_IGN
+from simbologia_ign import sld as generar_sld
+
 RAIZ = Path(__file__).resolve().parent.parent
 ZIP = RAIZ / "docs" / "tpi" / "sig_ign.zip"
 CARPETA = RAIZ / "docs" / "tpi" / "sig_ign" / "SIG_IGN2011"
@@ -39,16 +43,7 @@ GS_CLAVE = os.environ.get("GEOSERVER_ADMIN_PASSWORD", "geoserver")
 ALMACEN = "sig_ign"
 ESTILOS = RAIZ / "geoserver" / "estilos"
 EDITABLE = "elementos_relevados"
-# Capa -> estilo de geoserver/estilos (las demás usan el estilo por defecto de GeoServer).
-ESTILO_POR_CAPA = {
-    "provincias": "ign_provincias",
-    "red_vial": "ign_red_vial",
-    "localidades": "ign_localidades",
-    "curso_de_agua_hid": "ign_curso_de_agua",
-    "espejo_de_agua_hid": "ign_espejo_de_agua",
-    "puente_red_vial_puntos": "ign_puentes",
-    EDITABLE: "visor_elementos_relevados",
-}
+ESTILO_EDITABLE = "visor_elementos_relevados"
 SQL_EDITABLE = f"""
 CREATE TABLE IF NOT EXISTS {EDITABLE} (
     gid serial PRIMARY KEY,
@@ -158,11 +153,20 @@ def publicar(capas: list[tuple[str, str]]):
         print(f"Publicada {ESPACIO}:{tabla} ({estado})")
 
 
+def estilos() -> list[tuple[str, str, bytes]]:
+    """(capa, estilo, SLD): las capas del IGN desde simbologia_ign.py y la editable desde su archivo."""
+    generados = [
+        (capa, f"ign_{capa}", generar_sld(f"ign_{capa}", estilo).encode())
+        for capa, estilo in SIMBOLOGIA_IGN.items()
+    ]
+    editable = (ESTILOS / f"{ESTILO_EDITABLE}.sld").read_bytes()
+    return [*generados, (EDITABLE, ESTILO_EDITABLE, editable)]
+
+
 def publicar_estilos():
     sld = "application/vnd.ogc.sld+xml"
-    for capa, estilo in ESTILO_POR_CAPA.items():
-        contenido = (ESTILOS / f"{estilo}.sld").read_bytes()
-        ruta = f"workspaces/{ESPACIO}/styles"
+    ruta = f"workspaces/{ESPACIO}/styles"
+    for capa, estilo, contenido in estilos():
         if geoserver("GET", f"{ruta}/{estilo}.json") == 404:
             geoserver("POST", f"{ruta}?name={estilo}", contenido, sld)
         else:

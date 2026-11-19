@@ -2,15 +2,15 @@
 - id: a.1
   descripcion: Servidor de bases de datos espaciales con las capas vectoriales del SIG IGN 250
   estado: completa
-  referencia: ADR-0003, ADR-0010
+  referencia: ADR-0003, ADR-0015
 - id: a.2
   descripcion: Servidor de mapas con servicios OGC (WMS y WFS)
   estado: completa
   referencia: ADR-0008
 - id: a.3
-  descripcion: Aplicación web de visualización (navegación, capas, leyenda, escala, consultas, medición y edición)
+  descripcion: Visor web con navegación, capas, leyenda, escala, consultas, medición y carga de elementos por WFS-T
   estado: completa
-  referencia: ADR-0001, ADR-0002, ADR-0009, ADR-0011
+  referencia: ADR-0009, ADR-0014, ADR-0016
 - id: b
   descripcion: Análisis de la RN 11 en el Chaco (km, población a 10 y 20 km, puentes) e informe
   estado: pendiente

@@ -1,7 +1,7 @@
 ---
 id: ADR-0004
 titulo: Despliegue en Kubernetes (k3s) en VPS con imágenes en GHCR
-estado: aceptada
+estado: reemplazada
 fecha: 2026-10-22
 ---
 

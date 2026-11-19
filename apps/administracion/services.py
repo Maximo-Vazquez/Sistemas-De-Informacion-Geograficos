@@ -51,7 +51,7 @@ def enviar_transaccion(xml: bytes) -> tuple[int, bytes, str]:
         f"{settings.GEOSERVER_ADMIN_USER}:{settings.GEOSERVER_ADMIN_PASSWORD}".encode()
     ).decode()
     pedido = urllib.request.Request(
-        f"{settings.GEOSERVER_URL}/{settings.GEOSERVER_WORKSPACE}/wfs",
+        f"{settings.GEOSERVER_URL_INTERNA}/{settings.GEOSERVER_WORKSPACE}/wfs",
         data=xml,
         method="POST",
         headers={"Authorization": f"Basic {credencial}", "Content-Type": "text/xml"},

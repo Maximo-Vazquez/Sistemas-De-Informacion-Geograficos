@@ -1,6 +1,6 @@
 """Configuración común a todos los entornos.
 
-Cada entorno (local, production, test) importa este módulo y ajusta lo propio.
+Los settings locales y de pruebas importan este módulo y ajustan lo propio.
 Los secretos llegan siempre por variables de entorno.
 """
 
@@ -21,6 +21,9 @@ SITE_ID = 1
 # Servidor de mapas (GeoServer, ADR-0008). El visor lo consume desde el navegador.
 GEOSERVER_URL = env_str("GEOSERVER_URL", "http://localhost:8085/geoserver").rstrip("/")
 GEOSERVER_WORKSPACE = env_str("GEOSERVER_WORKSPACE", "ign")
+# Dirección con la que Django (no el navegador) llega a GeoServer; en el servicio web de Compose
+# es http://geoserver:8080/geoserver. Por defecto, la misma que usa el navegador.
+GEOSERVER_URL_INTERNA = env_str("GEOSERVER_URL_INTERNA", GEOSERVER_URL).rstrip("/")
 # La carga de elementos (WFS-T) pasa por Django: el navegador nunca ve la clave de GeoServer.
 GEOSERVER_ADMIN_USER = env_str("GEOSERVER_ADMIN_USER", "admin")
 GEOSERVER_ADMIN_PASSWORD = env_str("GEOSERVER_ADMIN_PASSWORD", "geoserver")
