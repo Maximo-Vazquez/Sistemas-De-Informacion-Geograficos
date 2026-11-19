@@ -5,8 +5,10 @@ vacío. Cuando exista PostGIS, cada panel recibe sus filas desde aquí.
 """
 
 from django.conf import settings
+from django.urls import reverse
 
 from .contexto import datos_pagina_admin
+from .models import ElementoVectorial
 
 PANELES = [
     {
@@ -63,4 +65,12 @@ def datos_visor(request):
             "wfsUrl": f"{base}/{espacio}/wfs",
         },
         "extension": EXTENSION_CHACO,
+        "elementosUrl": reverse("administracion:elementos"),
+    }
+
+
+def capa_relevamiento():
+    return {
+        "type": "FeatureCollection",
+        "features": [elemento.como_feature() for elemento in ElementoVectorial.objects.order_by("pk").iterator()],
     }

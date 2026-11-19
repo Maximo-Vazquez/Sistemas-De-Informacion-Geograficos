@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto"
 import type { Page } from "@playwright/test"
 import { conSesion, expect, test } from "../fixtures/prueba"
 
@@ -181,5 +182,59 @@ test.describe("Visor", () => {
     await expect(resultados.getByText("39 elementos en 1 capa")).toBeVisible()
     await expect(resultados.getByText("3 de 39")).toBeVisible()
     await expect(resultados.getByRole("button", { name: "Resistencia" })).toBeVisible()
+  })
+
+  test("dibuja un punto, guarda sus atributos y lo recupera al recargar", async ({ page }) => {
+    const nombre = `Relevamiento E2E ${randomUUID()}`
+    const barra = page.getByRole("toolbar", { name: "Herramientas del mapa" })
+    await barra.getByRole("button", { name: "Agregar elemento" }).click()
+    const centro = await centroDelMapa(page)
+    await page.mouse.click(centro.x, centro.y)
+
+    const formulario = page.getByRole("dialog", { name: "Atributos del elemento" })
+    const guardar = formulario.getByRole("button", { name: "Guardar elemento" })
+    await formulario.getByLabel("Descripción (opcional)").fill("Acceso de prueba")
+    await formulario.getByLabel("Nombre").fill(nombre)
+    await guardar.click()
+    await expect(formulario).toBeHidden()
+    await expect(page.getByRole("switch", { name: "Relevamientos" })).toBeChecked()
+
+    const carga = page.waitForResponse((respuesta) =>
+      respuesta.ok() && new URL(respuesta.url()).pathname === "/administracion/visor/elementos/",
+    )
+    await page.reload()
+    await carga
+    await page.getByRole("switch", { name: "Relevamientos" }).click()
+    await barra.getByRole("button", { name: "Punto", exact: true }).click()
+    await page.mouse.click(centro.x, centro.y)
+    const resultados = page.getByRole("region", { name: "Resultados de la consulta" })
+    await resultados.getByRole("button", { name: nombre }).click()
+    await expect(resultados.getByText("Acceso de prueba")).toBeVisible()
+  })
+
+  test("dibuja una línea y un polígono desde el mapa", async ({ page }) => {
+    const barra = page.getByRole("toolbar", { name: "Herramientas del mapa" })
+    const controles = page.getByRole("group", { name: "Tipo de geometría" })
+    const formulario = page.getByRole("dialog", { name: "Atributos del elemento" })
+    const centro = await centroDelMapa(page)
+    for (const [titulo, tipo] of [["Línea", "LineString"], ["Polígono", "Polygon"]]) {
+      await barra.getByRole("button", { name: "Agregar elemento" }).click()
+      await controles.getByRole("button", { name: titulo }).click()
+      await page.mouse.click(centro.x - 75, centro.y + 60)
+      if (tipo === "LineString") {
+        await page.mouse.dblclick(centro.x + 75, centro.y + 60)
+      } else {
+        await page.mouse.click(centro.x + 75, centro.y + 60)
+        await page.mouse.click(centro.x, centro.y)
+        await page.mouse.click(centro.x - 75, centro.y + 60)
+      }
+      await formulario.getByLabel("Nombre").fill(titulo)
+      const guardado = page.waitForResponse((respuesta) =>
+        respuesta.status() === 201 && new URL(respuesta.url()).pathname === "/administracion/visor/elementos/",
+      )
+      await formulario.getByRole("button", { name: "Guardar elemento" }).click()
+      expect((await (await guardado).json()).geometry.type).toBe(tipo)
+      await expect(formulario).toBeHidden()
+    }
   })
 })

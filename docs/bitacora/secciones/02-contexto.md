@@ -11,5 +11,5 @@ La cátedra pide, en grupos de 4 a 5 integrantes y con las capas del SIG IGN 250
 ## Objetivos del proyecto
 
 - Una sola aplicación web (Visor SIG Chaco) que cubra el punto a y muestre los resultados del punto b.
-- Procesos reproducibles: análisis con QGIS automatizado por scripts y MCP, despliegue con contenedores y CI.
+- Procesos reproducibles mediante Docker Compose local, comprobaciones de calidad y análisis con QGIS automatizado por scripts y MCP.
 - Trazabilidad: cada decisión y cada paso queda en esta bitácora.

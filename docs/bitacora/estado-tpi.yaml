@@ -8,9 +8,9 @@
   estado: completa
   referencia: ADR-0008
 - id: a.3
-  descripcion: Aplicación web de visualización (navegación, capas, leyenda, escala, consultas, medición y edición)
+  descripcion: Visor web con navegación, capas, leyenda, escala, consultas, medición y alta en Relevamientos
   estado: en curso
-  referencia: ADR-0001, ADR-0002, ADR-0009
+  referencia: ADR-0009, ADR-0013
 - id: b
   descripcion: Análisis de la RN 11 en el Chaco (km, población a 10 y 20 km, puentes) e informe
   estado: pendiente

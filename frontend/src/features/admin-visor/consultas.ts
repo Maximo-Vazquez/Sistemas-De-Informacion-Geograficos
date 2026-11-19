@@ -3,13 +3,15 @@ import type Feature from "ol/Feature"
 import type { Coordinate } from "ol/coordinate"
 import type { Extent } from "ol/extent"
 import ImageWMS from "ol/source/ImageWMS"
+import type VectorSource from "ol/source/Vector"
+import { CAPA_RELEVAMIENTOS } from "./types"
 import type { CapaWms } from "./types"
 
 // Tope de elementos por capa: alcanza para leerlos en el panel y evita bajar miles de
 // geometrías al navegador. El total real llega aparte (numberMatched) y se informa.
 export const LIMITE_POR_CAPA = 50
 // Tolerancia en píxeles alrededor del clic: sin ella es casi imposible acertarle a un punto o una línea.
-const TOLERANCIA_PX = 8
+export const TOLERANCIA_PX = 8
 const PROYECCION_MAPA = "EPSG:3857"
 
 export type Elemento = { id: string; titulo: string; atributos: [string, string][]; feature: Feature }
@@ -23,6 +25,7 @@ const esOculto = (clave: string) => OCULTOS.has(clave) || clave.startsWith("igds
 // Los shapefiles cortan los nombres de campo a 10 caracteres; los más usados se traducen.
 const ETIQUETAS: Record<string, string> = {
   nombre: "Nombre",
+  descripcion: "Descripción",
   tipo: "Tipo",
   provincia: "Provincia",
   departamen: "Departamento",
@@ -94,6 +97,17 @@ function aElemento(feature: Feature, indice: number): Elemento {
 }
 
 const lector = new GeoJSON({ dataProjection: PROYECCION_MAPA, featureProjection: PROYECCION_MAPA })
+
+export function consultarRelevamientos(origen: VectorSource, extension: Extent): ResultadoCapa {
+  const features = origen.getFeaturesInExtent(extension)
+    .filter((feature) => feature.getGeometry()?.intersectsExtent(extension))
+  return {
+    capa: CAPA_RELEVAMIENTOS,
+    elementos: features.slice(0, LIMITE_POR_CAPA).map(aElemento),
+    total: features.length,
+    error: false,
+  }
+}
 
 async function leer(capa: CapaWms, url: string, signal: AbortSignal): Promise<ResultadoCapa> {
   try {

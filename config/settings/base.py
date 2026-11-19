@@ -1,6 +1,6 @@
 """Configuración común a todos los entornos.
 
-Cada entorno (local, production, test) importa este módulo y ajusta lo propio.
+Los settings locales y de pruebas importan este módulo y ajustan lo propio.
 Los secretos llegan siempre por variables de entorno.
 """
 

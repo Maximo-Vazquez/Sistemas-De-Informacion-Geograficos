@@ -30,7 +30,7 @@ encabezado:
   - Bitácora técnica
 
 # SemVer: major al cerrar una entrega, minor por contenido nuevo, patch por correcciones.
-version: 0.10.0
+version: 0.11.0
 versiones:
   - version: 0.1.0
     fecha: 2026-10-22
@@ -94,3 +94,8 @@ versiones:
       - Integración de la rama del visor con búsqueda y grupos de capas
       - Incorporación de medición de distancias y consultas por punto y rectángulo
       - Actualización de verificaciones y pendientes de las funciones del visor
+  - version: 0.11.0
+    fecha: 2026-11-19
+    cambios:
+      - Alta de geometrías y atributos en la capa vectorial Relevamientos
+      - Retiro de la configuración de despliegue remoto y actualización del arranque local

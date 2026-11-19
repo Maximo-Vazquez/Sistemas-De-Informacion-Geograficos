@@ -1,7 +1,7 @@
 ---
 id: ADR-0011
 titulo: Propuesta de aplicación, GeoServer y PostGIS compartidos
-estado: propuesta
+estado: descartada
 fecha: 2026-11-13
 ---
 

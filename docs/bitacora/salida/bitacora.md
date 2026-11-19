@@ -17,13 +17,14 @@
 | **Proyecto** | Visor SIG Chaco |
 | **Lugar de realización** | Universidad Tecnológica Nacional – Facultad Regional Resistencia<br>French 414, Resistencia, Chaco, Argentina. |
 | **Nombre del documento** | Bitácora técnica – Visor SIG Chaco |
-| **Versión/Edición** | 0.10.0 |
-| **Fecha de versión** | 17/11/2026 |
+| **Versión/Edición** | 0.11.0 |
+| **Fecha de versión** | 19/11/2026 |
 
 ## Control de versiones
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.11.0 | 19/11/2026 | Alta de geometrías y atributos en la capa vectorial Relevamientos; Retiro de la configuración de despliegue remoto y actualización del arranque local |
 | 0.10.0 | 17/11/2026 | Integración de la rama del visor con búsqueda y grupos de capas; Incorporación de medición de distancias y consultas por punto y rectángulo; Actualización de verificaciones y pendientes de las funciones del visor |
 | 0.9.0 | 13/11/2026 | Propuesta de aplicación, GeoServer y PostGIS compartidos (ADR-0011); Aclaración de la carga inicial de capas y del acceso sin ZIP para usuarios del visor |
 | 0.8.0 | 13/11/2026 | Inventario de las 47 capas, sus geometrías, tablas y cantidades; Resumen de los cambios realizados y guía para reproducir la carga en equipo |
@@ -46,7 +47,7 @@ Este documento registra el desarrollo del Trabajo Práctico Integrador (TPI) de 
 
 ## 1.2 Alcance
 
-Cubre la aplicación web del proyecto (Django y React), la infraestructura (PostgreSQL/PostGIS, servidor de mapas, contenedores y Kubernetes) y el trabajo de análisis y cartografía con QGIS. No reemplaza al informe del punto b ni al mapa del punto c: los referencia.
+Cubre la aplicación web del proyecto (Django y React), los servicios locales (PostgreSQL, PostGIS y GeoServer) y el trabajo de análisis y cartografía con QGIS. Incluye referencias al informe del punto b y al mapa del punto c.
 
 ## 1.3 Estructura y estándares
 
@@ -80,18 +81,16 @@ La cátedra pide, en grupos de 4 a 5 integrantes y con las capas del SIG IGN 250
 ## 2.2 Objetivos del proyecto
 
 - Una sola aplicación web (Visor SIG Chaco) que cubra el punto a y muestre los resultados del punto b.
-- Procesos reproducibles: análisis con QGIS automatizado por scripts y MCP, despliegue con contenedores y CI.
+- Procesos reproducibles mediante Docker Compose local, comprobaciones de calidad y análisis con QGIS automatizado por scripts y MCP.
 - Trazabilidad: cada decisión y cada paso queda en esta bitácora.
 
 # 3 Arquitectura y stack tecnológico
 
 ## 3.1 Vista general
 
-Django sirve las páginas y monta pantallas React compiladas con Vite (no es una SPA). PostgreSQL guarda los datos de la aplicación y un servicio PostGIS separado guarda las capas IGN. GeoServer las publica por WMS/WFS y el visor web las consume. En producción, un pod de Kubernetes corre Django (Gunicorn) junto a nginx, que sirve los estáticos.
+Django sirve las páginas y monta pantallas React compiladas con Vite. PostgreSQL guarda los datos de la aplicación y los elementos de la capa Relevamientos. Un servicio PostGIS separado guarda las capas IGN y GeoServer las publica por WMS y WFS.
 
-En desarrollo local también se puede ejecutar `docker compose up -d --build web geoserver`. El servicio opcional `web` usa `runserver` para servir las páginas y los estáticos compilados de la imagen, y recibe el entorno desde `.env`. Gunicorn conserva su uso de producción con nginx.
-
-Como alternativa para evaluar con el equipo, el ADR-0011 propone una aplicación y un GeoServer compartidos, conectados a un PostGIS compartido. Las capas se cargarían una vez en el servidor y los usuarios del visor accederían desde el navegador sin descargar el ZIP. Esta alternativa todavía no está aprobada ni desplegada.
+Para ejecutar el proyecto localmente, se puede usar `docker compose up -d --build web geoserver`. El servicio `web` usa `runserver` para servir las páginas y los estáticos compilados, y recibe el entorno desde `.env`.
 
 ## 3.2 Stack actual
 
@@ -101,19 +100,17 @@ Tabla: Tecnologías en uso
 |---|---|---|---|
 | Backend | Django | 5.2.18 | Aplicación web, vistas y administración |
 | Autenticación | django-allauth (Google) | 65.20.1 | Login con Google, sin contraseñas |
-| Base de datos | PostgreSQL | 17 | Cuentas, sesiones y datos de Django |
+| Base de datos | PostgreSQL | 17 | Cuentas, sesiones y elementos de Relevamientos |
 | Base espacial | PostGIS sobre PostgreSQL | 3.5.2 / 17 | Capas IGN en el esquema `ign` (ADR-0010) |
 | Driver | psycopg | 3.3.6 | Conexión Django–PostgreSQL |
-| Servidor WSGI | Gunicorn | 26.2.0 | Producción |
 | Frontend | React + TypeScript | 19.3 / 7.0 | Pantallas montadas por Django |
 | Build | Vite + Tailwind CSS | 8.3 / 4.3 | Compilación y estilos |
 | Componentes | shadcn/ui (Base UI) + coss | 4.21 / 1.8 | Biblioteca de componentes de UI |
 | Gráficos | Recharts | 3.8 | Paneles de Administración |
 | Globo 3D | Magic UI Globe (cobe, WebGL) | 0.6 | Globo interactivo del inicio, centrado en el Chaco |
 | Calidad | Ruff | 0.17.2 | Estilo y complejidad ciclomática (≤ 10) |
-| Contenedores | Docker (multi-etapa) | Node 24 / Python 3.13 | Imagen publicada en GHCR |
-| Orquestación | Kubernetes (k3s) | — | Despliegue en VPS |
-| CI/CD | GitHub Actions | — | Calidad, imagen por tag `v*` y deploy manual |
+| Contenedores | Docker Compose y Dockerfile multi-etapa | Node 24 / Python 3.13 | Servicios locales del TPI |
+| CI | GitHub Actions | — | Calidad, bitácora y pruebas de navegador |
 | Análisis SIG | QGIS + QGIS MCP | 4.2.2 / 0.14.1 | Análisis del punto b y mapa del punto c |
 | Documentación | Python + Markdown + WeasyPrint | 70.0 | Esta bitácora en PDF |
 | Pruebas de navegador | Playwright (Chromium) | 1.63 | Pruebas de flujos y capturas de pantalla |
@@ -122,8 +119,7 @@ Tabla: Tecnologías en uso
 
 ## 3.3 Componentes previstos
 
-- Conexión de Django a PostGIS para los cálculos del panel y herramientas de consulta, medición y edición del visor.
-- Provisionar PostGIS y GeoServer para el despliegue en el VPS.
+- Conexión de Django a PostGIS para los cálculos del panel sobre la RN 11.
 
 # 4 Estado de las consignas del TPI
 
@@ -135,7 +131,7 @@ Tabla: Estado de las consignas del TPI
 |---|---|---|---|
 | a.1 | Servidor de bases de datos espaciales con las capas vectoriales del SIG IGN 250 | Completa | ADR-0003, ADR-0010 |
 | a.2 | Servidor de mapas con servicios OGC (WMS y WFS) | Completa | ADR-0008 |
-| a.3 | Aplicación web de visualización (navegación, capas, leyenda, escala, consultas, medición y edición) | En curso | ADR-0001, ADR-0002, ADR-0009 |
+| a.3 | Visor web con navegación, capas, leyenda, escala, consultas, medición y alta en Relevamientos | En curso | ADR-0009, ADR-0013 |
 | b | Análisis de la RN 11 en el Chaco (km, población a 10 y 20 km, puentes) e informe | Pendiente | ADR-0006 |
 | c | Mapa A4 en PDF con la traza, áreas de influencia, puentes y accidentes naturales | Pendiente | ADR-0006 |
 
@@ -150,14 +146,16 @@ Tabla: Resumen de decisiones
 | ADR-0001 | Django con allauth y login de Google estándar | aceptada | 22/10/2026 |
 | ADR-0002 | Frontend React con shadcn (Base UI) y coss | aceptada | 22/10/2026 |
 | ADR-0003 | PostgreSQL desde el inicio, PostGIS en la etapa siguiente | aceptada | 22/10/2026 |
-| ADR-0004 | Despliegue en Kubernetes (k3s) en VPS con imágenes en GHCR | aceptada | 22/10/2026 |
+| ADR-0004 | Despliegue en Kubernetes (k3s) en VPS con imágenes en GHCR | reemplazada | 22/10/2026 |
 | ADR-0005 | Bitácora generada desde Markdown con Python y WeasyPrint | aceptada | 22/10/2026 |
 | ADR-0006 | QGIS automatizado con QGIS MCP para análisis y cartografía | aceptada | 24/09/2026 |
 | ADR-0007 | Playwright para pruebas de navegador y capturas de pantalla | aceptada | 22/10/2026 |
 | ADR-0008 | GeoServer como servidor de mapas WMS/WFS | aceptada | 29/10/2026 |
 | ADR-0009 | OpenLayers como biblioteca de mapas del visor | aceptada | 29/10/2026 |
 | ADR-0010 | PostGIS dedicado para las capas IGN en desarrollo | aceptada | 13/11/2026 |
-| ADR-0011 | Propuesta de aplicación, GeoServer y PostGIS compartidos | propuesta | 13/11/2026 |
+| ADR-0011 | Propuesta de aplicación, GeoServer y PostGIS compartidos | descartada | 13/11/2026 |
+| ADR-0012 | Ejecución local del TPI | aceptada | 19/11/2026 |
+| ADR-0013 | Alta en la capa vectorial Relevamientos | aceptada | 19/11/2026 |
 
 ## 5.1 ADR-0001 — Django con allauth y login de Google estándar
 
@@ -233,7 +231,7 @@ PostgreSQL 17 en desarrollo (base local `gis_tpi`, o `docker-compose.yml`), CI y
 
 ## 5.4 ADR-0004 — Despliegue en Kubernetes (k3s) en VPS con imágenes en GHCR
 
-*Estado: aceptada · Fecha: 22/10/2026*
+*Estado: reemplazada · Fecha: 22/10/2026*
 
 ### Contexto
 
@@ -414,7 +412,7 @@ Los scripts de importación y publicación documentan el procedimiento. La impor
 
 ## 5.11 ADR-0011 — Propuesta de aplicación, GeoServer y PostGIS compartidos
 
-*Estado: propuesta · Fecha: 13/11/2026*
+*Estado: descartada · Fecha: 13/11/2026*
 
 ### Contexto
 
@@ -441,6 +439,48 @@ La propuesta admite instalaciones locales para desarrollo y pruebas. No implica 
 - Para el acceso compartido se deben definir las direcciones de la aplicación y de GeoServer. Si se mantiene el ingreso con Google, también habrá que registrar el callback correspondiente y configurar los orígenes necesarios para los servicios web.
 - El equipo debe acordar el entorno, quién lo administra y cómo se conservarán los datos y las credenciales. La disponibilidad del entorno compartido condicionará el acceso al visor.
 - La instalación local y los scripts de carga existentes seguirían siendo útiles para pruebas o para preparar los datos iniciales del entorno compartido.
+
+## 5.12 ADR-0012 — Ejecución local del TPI
+
+*Estado: aceptada · Fecha: 19/11/2026 · Reemplaza a ADR-0004*
+
+### Contexto
+
+El equipo decidió ejecutar y presentar el TPI en un entorno local. Django, PostgreSQL, PostGIS y GeoServer ya se pueden iniciar en la computadora de la demostración.
+
+### Opciones consideradas
+
+- Ejecución local con Docker Compose y Django.
+- Despliegue del proyecto en un VPS o en un entorno compartido.
+
+### Decisión
+
+La aplicación y los servicios SIG se ejecutan localmente. Docker Compose publica los servicios en la interfaz de loopback. Se retiran los manifiestos de Kubernetes y los workflows de publicación y despliegue. Se conservan las comprobaciones de calidad y las pruebas de navegador.
+
+### Consecuencias
+
+Cada instalación prepara sus volúmenes y carga las capas del IGN con los scripts del proyecto. El acceso con Google y el mapa base Argenmap siguen usando sus servicios externos.
+
+## 5.13 ADR-0013 — Alta en la capa vectorial Relevamientos
+
+*Estado: aceptada · Fecha: 19/11/2026*
+
+### Contexto
+
+La consigna a.3 admite ingresar una geometría y sus atributos en una capa creada para ese fin o en una capa SIG IGN 250.
+
+### Opciones consideradas
+
+- Editar una capa SIG IGN 250 mediante WFS transaccional.
+- Crear una capa de relevamientos del visor con persistencia a cargo de Django.
+
+### Decisión
+
+El visor incorpora la capa **Relevamientos**, con puntos, líneas y polígonos de un anillo. OpenLayers captura la geometría y la convierte a GeoJSON en EPSG:4326. Django valida el dibujo, el nombre y la descripción, y guarda el alta en el PostgreSQL de la aplicación.
+
+### Consecuencias
+
+El visor carga la capa por GeoJSON y permite consultarla por punto o rectángulo. El alta funciona con la base local de Django y usa una clave de solicitud para que un reintento conserve un único elemento. Las capas del IGN se siguen sirviendo a través de GeoServer.
 
 # 6 Bitácora de trabajo
 
@@ -793,6 +833,34 @@ Integrar los cambios de la rama de Joaquín en la rama de trabajo que contiene l
 - Implementar el alta de elementos con geometría y atributos; la consigna del visor continúa en curso.
 - Completar los análisis y el mapa de las consignas restantes.
 
+## 6.13 19/11/2026 — Alta de elementos en el visor y ejecución local
+
+*Asistencia técnica del proyecto · Decisiones: ADR-0012, ADR-0013*
+
+### Objetivo
+
+Completar el ingreso de geometrías y atributos del visor y preparar la ejecución local del TPI.
+
+### Trabajo realizado
+
+- Se incorporó la herramienta **Agregar elemento** con dibujo de puntos, líneas y polígonos y un formulario con nombre y descripción.
+- Django guarda cada alta en PostgreSQL. El visor recupera la capa **Relevamientos** en formato GeoJSON y permite consultar sus atributos por punto o rectángulo.
+- Se retiraron los manifiestos k3s y los workflows de publicación y despliegue remoto. Docker Compose mantiene Django, PostgreSQL, PostGIS y GeoServer en puertos locales.
+- Pasaron Ruff, las 18 pruebas de Django con PostgreSQL, el chequeo de migraciones, el control de colores y la compilación del frontend y de la imagen Docker. Las ocho pruebas del visor en Chromium verificaron las tres geometrías y la recuperación del punto y sus atributos después de recargar.
+- Las dos pruebas de alta también pasaron en un viewport móvil con tema oscuro, usando una base SQLite temporal.
+
+### Problemas y soluciones
+
+- Se preparó un PostgreSQL temporal y una sesión de prueba de Django para ejecutar las verificaciones con datos aislados. Las pruebas del visor simularon los servicios de mapas del IGN y usaron el backend real para guardar los relevamientos.
+- En móvil, el texto de ayuda cubría parte del área de dibujo e interceptaba clics. El panel deja los eventos de dibujo disponibles en el mapa y reserva la interacción de la barra para sus botones.
+- Docker Desktop devolvió un error del motor durante la última reconstrucción. Se verificaron la configuración de Compose y la compilación final del frontend.
+- Se recuperó el motor tras reiniciar WSL y se reconstruyó la imagen local. Django aplicó la migración de Relevamientos y respondió con sus archivos estáticos.
+- El catálogo conservaba cinco capas de laboratorio conectadas al contenedor local `postgis` en el puerto 5433. Al iniciarlo, GeoServer respondió al catálogo WMS.
+
+### Pendientes
+
+- Demostrar el visor con las capas reales del IGN y completar los análisis y la cartografía de la Ruta Nacional 11.
+
 # 7 Riesgos y pendientes
 
 ## 7.1 Riesgos
@@ -801,25 +869,20 @@ Tabla: Riesgos identificados
 
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
-| Fecha de entrega (01/12/2026 al 03/12/2026) con visor y análisis incompletos | Alto | Priorizar la validación del visor, el alta de elementos y el análisis de la ruta |
+| Fecha de entrega (01/12/2026 al 03/12/2026) con visor y análisis incompletos | Alto | Priorizar la demostración del visor con datos reales y el análisis de la ruta |
 | Cálculo de distancias y áreas en coordenadas geográficas | Alto | Reproyectar a un CRS métrico (POSGAR 2007, faja correspondiente) antes de medir y de generar buffers |
 | Categorías de población excluyentes (0–10 km y 10–20 km) mal calculadas | Medio | Usar anillos (buffer 20 km menos buffer 10 km) y documentar el criterio de asignación de localidades |
-| Credenciales de Google y del VPS | Medio | Solo en secrets de GitHub y `.env` local; nunca en el repositorio |
+| Credenciales de Google | Medio | Guardarlas en el `.env` local |
 | Administración abierta a cualquier cuenta de Google | Bajo | Aceptado para el TPI; agregar un permiso propio si se cargan datos sensibles |
 
 ## 7.2 Pendientes
 
 - [PENDIENTE] Completar los integrantes del grupo en `docs/bitacora/documento.yaml`.
 - El usuario confirmó el acceso autenticado al visor con Google y la visualización del mapa base. El servicio local `web` de Compose recibe las credenciales mediante `env_file: .env`; tras cambiar ese archivo, recrear el servicio.
-- [PENDIENTE] Cargar los secrets del deploy (`DJANGO_SECRET_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) y registrar la URI de redirección del dominio en Google.
 - Las 47 capas del ZIP IGN están cargadas en el PostGIS local `gisdb` y publicadas por WMS/WFS. Los volúmenes locales no se distribuyen con el repositorio; para reproducir la carga local se usa el ZIP y la importación documentada en el README.
-- [PENDIENTE] Evaluar con el equipo la propuesta de entorno compartido (ADR-0011), incluida la persistencia y la carga o restauración inicial de los datos.
-- [PENDIENTE] Definir el dominio de despliegue (nginx y `CSRF_TRUSTED_ORIGINS`).
 - [PENDIENTE] Conectar Django al PostGIS del proyecto para alimentar el panel y realizar los cálculos geográficos.
-- [PENDIENTE] Desplegar GeoServer en el VPS (manifiesto k8s) y definir su URL pública.
 - Las consultas por punto y rectángulo y la medición de distancias están implementadas. La rama incorporada incluye pruebas de navegador con servicios simulados.
 - [PENDIENTE] Verificar esas herramientas, los interruptores y las leyendas con las capas reales del IGN.
-- [PENDIENTE] Implementar el alta de elementos con geometría y atributos.
 
 # 8 Glosario
 
@@ -949,4 +1012,4 @@ El ADR-0011 plantea como idea un entorno compartido con las capas cargadas en el
 
 Se contrastaron las cantidades de las 47 tablas con los archivos DBF del ZIP. Para cada capa publicada se comprobó un `GetFeature` WFS con su conteo, un `GetMap` WMS y una leyenda PNG; también se verificó CORS para el origen local. Se probaron geometrías de provincias, localidades, puentes, rutas, agua y vegetación, y se generó un mapa combinado de las cinco primeras. Pasaron 13 tests de Django, Ruff, TypeScript, la compilación del frontend y el control de colores.
 
-La publicación inicial usa la simbología disponible en GeoServer; no se verificó que cada clase cartográfica del manual del IGN tenga un estilo propio. Quedan pendientes las consultas gráficas por punto y rectángulo, la medición de distancias, el ingreso de geometrías y atributos, el enlace de Django a PostGIS para los indicadores y los análisis de la Ruta Nacional 11. El despliegue de PostGIS y GeoServer en el VPS también queda pendiente.
+La publicación inicial usa la simbología disponible en GeoServer. Queda pendiente verificar los estilos por clase del manual del IGN y demostrar las herramientas de consulta y medición con las capas reales. El ingreso de geometrías y atributos se realiza en la capa Relevamientos. El enlace de Django con PostGIS para los indicadores y los análisis de la Ruta Nacional 11 siguen pendientes.

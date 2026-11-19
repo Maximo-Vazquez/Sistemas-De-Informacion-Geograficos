@@ -6,8 +6,12 @@ import VectorSource from "ol/source/Vector"
 import DragBox from "ol/interaction/DragBox"
 import { unByKey } from "ol/Observable"
 import { Circle, Fill, Stroke, Style } from "ol/style"
+import { boundingExtent, buffer } from "ol/extent"
+import type { Extent } from "ol/extent"
 import { colorDeToken } from "./colores"
-import { consultarPunto, consultarRectangulo, type Elemento, type ResultadoCapa } from "./consultas"
+import {
+  TOLERANCIA_PX, consultarPunto, consultarRectangulo, consultarRelevamientos, type Elemento, type ResultadoCapa,
+} from "./consultas"
 import type { CapaWms } from "./types"
 
 export type ModoConsulta = "punto" | "rectangulo"
@@ -45,6 +49,7 @@ export function useConsulta({
   mapa,
   modo,
   capas,
+  relevamientos,
   wmsUrl,
   wfsUrl,
   oscuro,
@@ -52,6 +57,7 @@ export function useConsulta({
   mapa: OlMap | null
   modo: ModoConsulta | null
   capas: CapaWms[]
+  relevamientos: VectorSource | null
   wmsUrl: string
   wfsUrl: string
   oscuro: boolean
@@ -63,10 +69,10 @@ export function useConsulta({
   const control = useRef<AbortController | null>(null)
   const numero = useRef(0)
   // Las capas encendidas se leen al consultar; así cambiar un interruptor no rearma las interacciones.
-  const capasActuales = useRef(capas)
+  const capasActuales = useRef({ capas, relevamientos })
   useEffect(() => {
-    capasActuales.current = capas
-  }, [capas])
+    capasActuales.current = { capas, relevamientos }
+  }, [capas, relevamientos])
 
   useEffect(() => {
     if (!mapa) return
@@ -86,19 +92,27 @@ export function useConsulta({
   }, [mapa, oscuro, seleccionado])
 
   const ejecutar = useCallback(
-    async (modoActual: ModoConsulta, consultar: (capas: CapaWms[], signal: AbortSignal) => Promise<ResultadoCapa[]>) => {
+    async (
+      modoActual: ModoConsulta,
+      extension: Extent,
+      consultar: (capas: CapaWms[], signal: AbortSignal) => Promise<ResultadoCapa[]>,
+    ) => {
       control.current?.abort()
       const actual = new AbortController()
       control.current = actual
       origen.current.clear()
       setSeleccionado(null)
-      if (capasActuales.current.length === 0) {
+      const { capas: encendidas, relevamientos: locales } = capasActuales.current
+      if (!encendidas.length && !locales) {
         setConsulta({ tipo: "sin-capas", modo: modoActual })
         return
       }
       setConsulta({ tipo: "consultando", modo: modoActual })
       try {
-        const resultados = await consultar(capasActuales.current, actual.signal)
+        const resultadoLocal = locales ? consultarRelevamientos(locales, extension) : null
+        const resultados = await consultar(encendidas, actual.signal)
+        if (actual.signal.aborted) return
+        if (resultadoLocal) resultados.unshift(resultadoLocal)
         origen.current.addFeatures(resultados.flatMap((resultado) => resultado.elementos.map((e) => e.feature)))
         numero.current += 1
         setConsulta({ tipo: "lista", modo: modoActual, resultados, numero: numero.current })
@@ -116,7 +130,8 @@ export function useConsulta({
     if (modo === "punto") {
       const escucha = mapa.on("singleclick", (evento) => {
         const resolucion = mapa.getView().getResolution() ?? 1
-        void ejecutar("punto", (capas, signal) =>
+        const extension = buffer(boundingExtent([evento.coordinate]), TOLERANCIA_PX * resolucion)
+        void ejecutar("punto", extension, (capas, signal) =>
           consultarPunto(wmsUrl, capas, evento.coordinate, resolucion, signal),
         )
       })
@@ -130,7 +145,7 @@ export function useConsulta({
     const recuadro = new DragBox({ className: "rounded-sm! border-2! border-primary! bg-primary/10!" })
     recuadro.on("boxend", () => {
       const extension = recuadro.getGeometry().getExtent()
-      void ejecutar("rectangulo", (capas, signal) => consultarRectangulo(wfsUrl, capas, extension, signal))
+      void ejecutar("rectangulo", extension, (capas, signal) => consultarRectangulo(wfsUrl, capas, extension, signal))
     })
     mapa.addInteraction(recuadro)
     return () => {

@@ -28,9 +28,8 @@ Cuando un archivo crece, convertirlo en paquete por responsabilidad (`views/`, `
 - No silenciar ruff con `noqa` para esquivar complejidad: refactorizar. Las excepciones se justifican en el mismo comentario.
 
 ## Settings y secretos
-- `config/settings/{base,local,production,test}.py`; leer el entorno solo con `config/settings/entorno.py` (`env_str`, `env_bool`, `env_list`).
-- Secretos únicamente por variables de entorno (local: `.env`; producción: secret `sig-runtime-credentials` que crea el workflow de deploy). Nunca credenciales en el código.
-- `production.py` falla si falta `DJANGO_SECRET_KEY`. Correr `manage.py check --deploy` con settings de producción antes de cambiar seguridad.
+- Configuración común, local y de pruebas en `config/settings/`. Leer el entorno solo con `config/settings/entorno.py` (`env_str`, `env_bool`, `env_list`).
+- Secretos únicamente por variables de entorno mediante `.env` local. Nunca guardar credenciales en el código.
 
 ## Autenticación
 - allauth estándar, solo Google (`SOCIALACCOUNT_ONLY`). Login y logout por POST con CSRF. Nada de JWT ni OIDC propio.

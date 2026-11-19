@@ -2,7 +2,7 @@
 
 Aplicación web del Trabajo Práctico Integrador de Sistemas de Información Geográfica (UTN FRRe, 2026): capas del SIG IGN 250 sobre PostGIS, servicios WMS/WFS y un visor web, más el análisis de la Ruta Nacional 11 en el Chaco. La consigna está en [docs/tpi/practico.pdf](docs/tpi/practico.pdf).
 
-Estado actual: inicio, Administración con login de Google y visor WMS/WFS. La instalación local puede cargar las 47 capas del paquete IGN en PostGIS y publicarlas en GeoServer. Los cálculos del panel y las herramientas de consulta, medición y edición siguen en preparación. El avance y las decisiones están en la [bitácora técnica](docs/bitacora/salida/bitacora.md).
+El proyecto se ejecuta localmente. El visor incluye consultas por punto y rectángulo, medición de distancias y alta de elementos con geometría y atributos. La instalación puede cargar las 47 capas del IGN en PostGIS y publicarlas en GeoServer. Los cálculos del panel para la RN 11 siguen pendientes. El avance está en la [bitácora técnica](docs/bitacora/salida/bitacora.md).
 
 ## Primer inicio
 
@@ -35,11 +35,18 @@ La aplicación queda en http://localhost:8000. El servicio `web` usa los assets 
 
 Para seguir con Google y volver al visor: http://localhost:8000/accounts/google/login/?next=/administracion/visor/.
 
-Ejecutar Gunicorn solo, sin nginx para `/static/`, devuelve el HTML pero no los archivos JavaScript y CSS; las pantallas React quedan vacías. El despliegue de producción conserva Gunicorn con nginx.
+### Agregar elementos al mapa
+
+1. Entrá a **Administración → Visor** y elegí **Agregar elemento** en la barra del mapa.
+2. Elegí **Punto**, **Línea** o **Polígono**. Hacé clic para ubicar un punto. Para una línea, marcá los vértices y hacé doble clic en el último. Para un polígono, marcá al menos tres vértices y hacé clic en el primero para cerrarlo.
+3. Completá **Nombre** y, si querés, **Descripción**. Elegí **Guardar elemento**.
+4. El visor activa **Relevamientos** al guardar. Para ver los elementos al volver al visor, activá esa capa en el panel. Usá **Punto** o **Rectángulo** para consultar sus atributos.
+
+Django guarda los elementos como GeoJSON en EPSG:4326 junto con sus atributos en el PostgreSQL local (`db`). La migración se aplica al iniciar con `manage.py runserver`. Si ya usabas la aplicación en Docker, reconstruí el servicio con `docker compose up -d --build web geoserver` para incorporar el alta.
 
 ### Capas IGN y bases de datos
 
-El servicio `db` guarda las cuentas y sesiones de Django en PostgreSQL; `gisdb` guarda las capas vectoriales en PostGIS. Son bases y volúmenes distintos. GeoServer accede a `gisdb` por la red de Compose y publica las capas en el espacio `ign`. La imagen PostGIS contiene el software y la extensión, mientras que las capas se cargan en el volumen `datos_gis`.
+El servicio `db` guarda las cuentas, sesiones y relevamientos en PostgreSQL. `gisdb` guarda las capas del IGN en PostGIS. GeoServer accede a `gisdb` por la red de Compose y publica esas capas en el espacio `ign`. La imagen PostGIS contiene el software y la extensión. Los datos de las capas se cargan en el volumen `datos_gis`.
 
 Para preparar una instalación nueva se necesita el ZIP del SIG IGN 250 y GDAL (`ogr2ogr`) con soporte PostgreSQL. Una vez iniciado `gisdb`, cargar y publicar:
 
@@ -54,9 +61,9 @@ La publicación crea el almacén `sig_ign2011` y conserva los almacenes existent
 
 En esta computadora se usó `D:/TPI/sig_ign.zip`. El ZIP contiene la carpeta `SIG_IGN2011`: sus 47 capas suman 570.443 elementos. Las cinco capas del laboratorio anterior permanecen en otro almacén y pueden generar entradas de nombre parecido en la lista. Para ver una capa en el visor, activá su interruptor.
 
-El [inventario de capas y cambios](docs/bitacora/secciones/09-inventario-capas-ign.md) detalla los nombres, geometrías, cantidades, verificaciones y pendientes para el equipo.
+En esta computadora, esas cinco capas anteriores usan el contenedor local `postgis` en el puerto 5433. Si GeoServer tarda en leer el catálogo después de reiniciar Docker, iniciá también ese contenedor con `docker start postgis`.
 
-**Idea para evaluar:** una aplicación y un GeoServer compartidos conectados a PostGIS, con las capas cargadas una vez en el servidor, permitirían usar el visor sin descargar el ZIP en cada computadora. La alternativa está documentada como [propuesta ADR-0011](docs/bitacora/decisiones/ADR-0011-despliegue-compartido.md); todavía no está aprobada ni desplegada.
+El [inventario de capas y cambios](docs/bitacora/secciones/09-inventario-capas-ign.md) detalla los nombres, geometrías, cantidades, verificaciones y pendientes para el equipo.
 
 ## Configurar el acceso con Google
 
@@ -81,7 +88,7 @@ La revisión de cumplimiento de la consigna está en [docs/revision-2026-11-12.m
 
 - `config/`, `apps/`, `templates/`: proyecto Django.
 - `frontend/`: React + Vite + shadcn (Base UI) y coss.
-- `k8s/`, `Dockerfile`, `.github/workflows/`: despliegue (imagen en GHCR por tag `v*`, deploy manual al VPS).
+- `Dockerfile` y `docker-compose.yml`: ejecución local. `.github/workflows/`: comprobaciones de calidad y pruebas.
 - `docs/bitacora/`: fuentes de la bitácora; `python scripts/generar_bitacora.py` genera el Markdown y el PDF.
 - `docs/qgis-mcp-y-skill.md`: configuración de QGIS MCP para el análisis y la cartografía.
 - `AGENTS.md` y `.agents/skills/`: instrucciones para trabajar en el repositorio.
@@ -100,9 +107,3 @@ pnpm --dir frontend typecheck
 ```
 
 CI (`0-calidad`) corre lo mismo contra PostgreSQL, compila el frontend y verifica la bitácora.
-
-## Despliegue
-
-1. Cargar en GitHub los secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `VPS_PORT`, `DJANGO_SECRET_KEY`, `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`.
-2. En el VPS, crear el secret `db-credentials-sig` (plantilla en `k8s/00-secret-db.yaml`) y `ghcr-cred` para descargar la imagen.
-3. Crear un tag `v*` (construye la imagen) y ejecutar el workflow **2. Deploy Manual a VPS**.

@@ -4,10 +4,10 @@
 - Aplicación web del Trabajo Práctico Integrador de SIG (UTN FRRe, 2026). Consigna: `docs/tpi/practico.pdf`.
 - Django con plantillas mínimas que montan pantallas React + TypeScript + Vite + Tailwind v4. No es una SPA.
 - Autenticación estándar de Django con allauth y Google; no agregar proveedores OIDC propios ni JWT.
-- Etapa actual: base (inicio, Administración, login con Google), GeoServer en Docker (`docker compose up -d geoserver`, puerto 8085) y visor OpenLayers en `/administracion/visor/`. Siguiente: PostGIS con las capas del IGN y funciones del visor.
+- Etapa actual: visor OpenLayers en `/administracion/visor/`, capas del IGN en PostGIS y GeoServer local, y herramientas de consulta, medición y alta en una capa de relevamientos.
 
 ## Estructura
-- `config/settings/`: `base`, `local` (por defecto en `manage.py`), `production` (Docker/k8s) y `test`. Entorno solo vía `config/settings/entorno.py`.
+- `config/settings/`: configuración común, local (por defecto) y de pruebas. Entorno solo vía `config/settings/entorno.py`.
 - `apps/core/`: inicio público, tag `{% vite_assets %}`, 403 y `runserver` de desarrollo (migra y compila el frontend).
 - `apps/cuentas/`: adaptador de allauth y pantallas de cuenta. Administración exige sesión (`login_required`).
 - `apps/administracion/`: panel; `contexto.py` arma el contrato `AdminPageData`, `navegacion.py` el sidebar.
@@ -26,7 +26,7 @@
 - Reutilizar componentes compartidos antes de crear nuevos; shadcn primero, coss para faltantes. Base UI compone con `render`, no `asChild`.
 - Las features no escriben colores: tokens de `frontend/src/index.css` y componentes compartidos (`pnpm --dir frontend check:colores`).
 - Backend: vistas delgadas, lecturas en `selectors.py`, escrituras en `services.py`/`servicios.py`. Complejidad ciclomática ≤ 10 (ruff, obligatorio). Largo de archivo ~300 líneas Python / ~250 TS: referencia orientativa, se puede extender.
-- Secretos solo por variables de entorno. Nunca credenciales en el código ni en `k8s/`.
+- Secretos solo por variables de entorno. Nunca guardar credenciales en el código.
 - **Al cerrar cada sesión con cambios, actualizar la bitácora** (registro, ADR si hubo decisiones, versión) y regenerarla.
 
 ## Verificación
