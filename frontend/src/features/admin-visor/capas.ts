@@ -1,4 +1,5 @@
 import WMSCapabilities from "ol/format/WMSCapabilities"
+import { colorDeToken } from "./colores"
 import type { CapaWms } from "./types"
 
 type CapaCapabilities = { Name?: string; Title?: string; Layer?: CapaCapabilities[] }
@@ -17,14 +18,22 @@ export async function leerCapas(wmsUrl: string, signal?: AbortSignal): Promise<C
   return raiz ? hojas(raiz) : []
 }
 
+// GeoServer escribe la leyenda con fondo blanco y texto negro: se pide transparente y con el
+// color de texto del tema (token "foreground", en el formato 0xRRGGBB que espera GeoServer).
+function colorTextoLeyenda() {
+  const [r, g, b] = colorDeToken("foreground")
+  return `0x${[r, g, b].map((canal) => Math.round(canal).toString(16).padStart(2, "0")).join("")}`
+}
+
 export function urlLeyenda(wmsUrl: string, capa: string) {
   const params = new URLSearchParams({
     service: "WMS",
     version: "1.3.0",
     request: "GetLegendGraphic",
     format: "image/png",
+    transparent: "true",
     layer: capa,
-    legend_options: "fontAntiAliasing:true;forceLabels:on",
+    legend_options: `fontAntiAliasing:true;forceLabels:on;fontColor:${colorTextoLeyenda()}`,
   })
   return `${wmsUrl}?${params}`
 }

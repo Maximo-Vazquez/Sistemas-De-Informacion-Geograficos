@@ -99,7 +99,7 @@ Las demás capas se publicaron con `ign:` seguido del nombre de la tabla. En una
 
 1. Preparar `.env` a partir de `.env.example` y configurar un cliente OAuth de Google válido, como explica el README.
 2. Desde la carpeta del proyecto, ejecutar `docker compose up -d --build web geoserver`. Esto inicia también `db` y `gisdb`.
-3. Si el volumen PostGIS está vacío, disponer del ZIP IGN y de `ogr2ogr` con soporte PostgreSQL. Ejecutar `python scripts/importar_ign.py <ruta-al-zip> --ogr2ogr <ruta-a-ogr2ogr>` y luego `python scripts/publicar_ign.py`.
+3. Si el volumen PostGIS está vacío, disponer del ZIP IGN y de `ogr2ogr` con soporte PostgreSQL. Ejecutar `python scripts/importar_ign.py <ruta-al-zip> --ogr2ogr <ruta-a-ogr2ogr>` y luego `python scripts/publicar_ign.py` y `python scripts/estilos_ign.py`.
 4. Entrar al visor en `http://localhost:8000/administracion/visor/`, iniciar sesión con Google, recargar y activar las capas deseadas.
 
 El ZIP del IGN, `.env` y los volúmenes de Docker no forman parte del commit. Para preparar una instalación local independiente mediante estos pasos, quien la prepare necesita el ZIP y debe configurar sus credenciales. El catálogo JSON sí se versiona como inventario de la carga realizada.

@@ -30,7 +30,7 @@ encabezado:
   - Bitácora técnica
 
 # SemVer: major al cerrar una entrega, minor por contenido nuevo, patch por correcciones.
-version: 0.11.0
+version: 0.12.0
 versiones:
   - version: 0.1.0
     fecha: 2026-10-22
@@ -99,3 +99,9 @@ versiones:
     cambios:
       - Alta de geometrías y atributos en la capa vectorial Relevamientos
       - Retiro de la configuración de despliegue remoto y actualización del arranque local
+  - version: 0.12.0
+    fecha: 2026-11-19
+    cambios:
+      - Simbología por clases de las 47 capas IGN generada por script (ADR-0014)
+      - Leyenda del visor transparente y con el color de texto del tema
+      - Consigna a.3 completa

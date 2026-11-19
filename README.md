@@ -53,9 +53,10 @@ Para preparar una instalación nueva se necesita el ZIP del SIG IGN 250 y GDAL (
 ```powershell
 python scripts/importar_ign.py docs/tpi/sig_ign.zip --ogr2ogr D:/GIS/bin/ogr2ogr.exe
 python scripts/publicar_ign.py
+python scripts/estilos_ign.py
 ```
 
-Reemplazá ambas rutas por las del ZIP y de `ogr2ogr` en tu computadora. El importador lee el ZIP directamente, preserva los atributos y comprueba el número de elementos de cada capa; no sobrescribe tablas existentes. El catálogo generado registra el hash del archivo de origen y los conteos. La publicación usa las credenciales de los contenedores sin escribirlas en el código.
+Reemplazá ambas rutas por las del ZIP y de `ogr2ogr` en tu computadora. El importador lee el ZIP directamente, preserva los atributos y comprueba el número de elementos de cada capa; no sobrescribe tablas existentes. El catálogo generado registra el hash del archivo de origen y los conteos. La publicación usa las credenciales de los contenedores sin escribirlas en el código. `estilos_ign.py` carga la simbología por clases de `scripts/simbologia_ign.py` y la asigna a cada capa; es la que muestra la leyenda del visor.
 
 La publicación crea el almacén `sig_ign2011` y conserva los almacenes existentes. Si otra capa ya usa el mismo nombre en el espacio `ign`, la capa del ZIP recibe el prefijo `sig2011_` y se identifica en el título como SIG IGN 250.
 

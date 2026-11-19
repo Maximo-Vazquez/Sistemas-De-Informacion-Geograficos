@@ -17,13 +17,14 @@
 | **Proyecto** | Visor SIG Chaco |
 | **Lugar de realización** | Universidad Tecnológica Nacional – Facultad Regional Resistencia<br>French 414, Resistencia, Chaco, Argentina. |
 | **Nombre del documento** | Bitácora técnica – Visor SIG Chaco |
-| **Versión/Edición** | 0.11.0 |
+| **Versión/Edición** | 0.12.0 |
 | **Fecha de versión** | 19/11/2026 |
 
 ## Control de versiones
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.12.0 | 19/11/2026 | Simbología por clases de las 47 capas IGN generada por script (ADR-0014); Leyenda del visor transparente y con el color de texto del tema; Consigna a.3 completa |
 | 0.11.0 | 19/11/2026 | Alta de geometrías y atributos en la capa vectorial Relevamientos; Retiro de la configuración de despliegue remoto y actualización del arranque local |
 | 0.10.0 | 17/11/2026 | Integración de la rama del visor con búsqueda y grupos de capas; Incorporación de medición de distancias y consultas por punto y rectángulo; Actualización de verificaciones y pendientes de las funciones del visor |
 | 0.9.0 | 13/11/2026 | Propuesta de aplicación, GeoServer y PostGIS compartidos (ADR-0011); Aclaración de la carga inicial de capas y del acceso sin ZIP para usuarios del visor |
@@ -131,7 +132,7 @@ Tabla: Estado de las consignas del TPI
 |---|---|---|---|
 | a.1 | Servidor de bases de datos espaciales con las capas vectoriales del SIG IGN 250 | Completa | ADR-0003, ADR-0010 |
 | a.2 | Servidor de mapas con servicios OGC (WMS y WFS) | Completa | ADR-0008 |
-| a.3 | Visor web con navegación, capas, leyenda, escala, consultas, medición y alta en Relevamientos | En curso | ADR-0009, ADR-0013 |
+| a.3 | Visor web con navegación, capas, leyenda, escala, consultas, medición y alta en Relevamientos | Completa | ADR-0009, ADR-0013, ADR-0014 |
 | b | Análisis de la RN 11 en el Chaco (km, población a 10 y 20 km, puentes) e informe | Pendiente | ADR-0006 |
 | c | Mapa A4 en PDF con la traza, áreas de influencia, puentes y accidentes naturales | Pendiente | ADR-0006 |
 
@@ -156,6 +157,7 @@ Tabla: Resumen de decisiones
 | ADR-0011 | Propuesta de aplicación, GeoServer y PostGIS compartidos | descartada | 13/11/2026 |
 | ADR-0012 | Ejecución local del TPI | aceptada | 19/11/2026 |
 | ADR-0013 | Alta en la capa vectorial Relevamientos | aceptada | 19/11/2026 |
+| ADR-0014 | Simbología de las capas IGN en SLD generada por script | aceptada | 19/11/2026 |
 
 ## 5.1 ADR-0001 — Django con allauth y login de Google estándar
 
@@ -481,6 +483,30 @@ El visor incorpora la capa **Relevamientos**, con puntos, líneas y polígonos d
 ### Consecuencias
 
 El visor carga la capa por GeoJSON y permite consultarla por punto o rectángulo. El alta funciona con la base local de Django y usa una clave de solicitud para que un reintento conserve un único elemento. Las capas del IGN se siguen sirviendo a través de GeoServer.
+
+## 5.14 ADR-0014 — Simbología de las capas IGN en SLD generada por script
+
+*Estado: aceptada · Fecha: 19/11/2026*
+
+### Contexto
+
+La consigna a.3 pide mostrar la leyenda de las capas con las clases de la simbología. Las 47 capas se publicaron con los estilos genéricos de GeoServer (`line`, `point`, `polygon`), cuya leyenda muestra un único símbolo sin clases. Además, en la vista de toda la provincia los 92.910 caminos de tierra tapaban el resto del mapa.
+
+### Opciones consideradas
+
+- Diseñar cada estilo a mano en la consola de GeoServer.
+- Escribir 47 archivos SLD a mano y versionarlos.
+- Definir la simbología como datos en Python y generar los SLD con un script que los cargue por la API REST.
+
+### Decisión
+
+La simbología se define en `scripts/simbologia_ign.py` y `scripts/estilos_ign.py` la carga en el espacio `ign` y la asigna como estilo por defecto de cada capa. Ocho capas se clasifican por un atributo con valores comprobados en PostGIS: red vial y vías secundarias por `tipo`, localidades por `tipo`, cursos de agua por `regimen`, espejos de agua, curvas de nivel, límites y puentes por `tipo`. Las demás reciben un símbolo propio según su tema. Las clases más densas se dibujan solo desde cierta escala, indicada en el título de la regla.
+
+### Consecuencias
+
+- La leyenda del visor muestra las clases con títulos en castellano, sin cambios en el frontend más allá del color del texto según el tema.
+- Cualquier instalación aplica la misma simbología con un comando, después de `publicar_ign.py`. La consola de GeoServer no es la fuente de verdad: un cambio hecho a mano se pierde al volver a correr el script.
+- Los colores de la simbología viven en el script, porque los dibuja GeoServer y no el frontend.
 
 # 6 Bitácora de trabajo
 
@@ -861,6 +887,34 @@ Completar el ingreso de geometrías y atributos del visor y preparar la ejecuci�
 
 - Demostrar el visor con las capas reales del IGN y completar los análisis y la cartografía de la Ruta Nacional 11.
 
+## 6.14 19/11/2026 — Simbología y leyenda por clases de las capas IGN
+
+*Asistencia técnica del proyecto · Decisiones: ADR-0014*
+
+### Objetivo
+
+Completar la leyenda con las clases de la simbología que pide la consigna a.3, la única función obligatoria del visor que faltaba.
+
+### Trabajo realizado
+
+- Se consultaron en PostGIS los valores de los atributos de las capas principales para definir las clases: `red_vial.tipo` (4 valores), `localidades.tipo` (11, agrupados en 4 clases), `curso_de_agua_hid.regimen` (2), `espejo_de_agua_hid.tipo` (7, agrupados en 5), `curvas_de_nivel.tipo` (2), `limite_politico_administrativo_lim.tipo` (3), `puente_red_vial_puntos.tipo` (4, agrupados en 2) y `vias_secundarias.tipo` (3, agrupados en 2).
+- `scripts/simbologia_ign.py` define la simbología de las 47 capas y genera el SLD de cada una. `scripts/estilos_ign.py` los carga en GeoServer por la API REST y los asigna como estilo por defecto. Se puede repetir: actualiza los estilos existentes.
+- Los caminos de tierra, los parajes y caseríos, las vías secundarias y las curvas intermedias se dibujan solo desde 1:1.000.000 o 1:500.000, según la clase. La escala figura en el título de cada regla.
+- Las localidades capitales, ciudades y cabeceras de departamento, y las provincias, se rotulan con su nombre.
+- La leyenda del visor se pide transparente y con el color de texto del tema (token `foreground`), y se vuelve a pedir al cambiar el tema.
+- Se ejecutó `python scripts/estilos_ign.py` contra el GeoServer local: 47 capas con estilo. Se revisaron las leyendas con `GetLegendGraphic` y mapas de la zona de Resistencia y de la provincia con `GetMap`.
+- Pasaron Ruff, TypeScript, el control de colores, la compilación del frontend y las 8 pruebas del visor en Chrome. Se revisaron capturas del visor con las capas reales en tema claro y oscuro.
+
+### Problemas y soluciones
+
+- Cada clase va en su propio `FeatureTypeStyle` para controlar el orden de dibujo. Como ahí `ElseFilter` abarcaría todos los elementos, la clase "resto" se expresa como un filtro que niega los valores de las otras clases.
+- En tema oscuro, la leyenda de GeoServer aparecía como un recuadro blanco. Se resolvió con `transparent=true` y `fontColor` tomado del token del tema, sin escribir colores en la feature.
+
+### Pendientes
+
+- Los rótulos del mapa usan halo blanco también en tema oscuro, porque GeoServer dibuja la imagen sin conocer el tema del visor.
+- [PENDIENTE] Consultar al profesor si la capa Relevamientos debe estar en PostGIS y servida por GeoServer.
+
 # 7 Riesgos y pendientes
 
 ## 7.1 Riesgos
@@ -882,7 +936,8 @@ Tabla: Riesgos identificados
 - Las 47 capas del ZIP IGN están cargadas en el PostGIS local `gisdb` y publicadas por WMS/WFS. Los volúmenes locales no se distribuyen con el repositorio; para reproducir la carga local se usa el ZIP y la importación documentada en el README.
 - [PENDIENTE] Conectar Django al PostGIS del proyecto para alimentar el panel y realizar los cálculos geográficos.
 - Las consultas por punto y rectángulo y la medición de distancias están implementadas. La rama incorporada incluye pruebas de navegador con servicios simulados.
-- [PENDIENTE] Verificar esas herramientas, los interruptores y las leyendas con las capas reales del IGN.
+- Las herramientas, los interruptores y las leyendas se verificaron con las capas reales del IGN. Las 47 capas tienen simbología propia y ocho se clasifican por atributo (ADR-0014).
+- [PENDIENTE] Consultar al profesor si la capa Relevamientos debe estar en PostGIS y servida por GeoServer.
 
 # 8 Glosario
 
@@ -1001,7 +1056,7 @@ Las demás capas se publicaron con `ign:` seguido del nombre de la tabla. En una
 
 1. Preparar `.env` a partir de `.env.example` y configurar un cliente OAuth de Google válido, como explica el README.
 2. Desde la carpeta del proyecto, ejecutar `docker compose up -d --build web geoserver`. Esto inicia también `db` y `gisdb`.
-3. Si el volumen PostGIS está vacío, disponer del ZIP IGN y de `ogr2ogr` con soporte PostgreSQL. Ejecutar `python scripts/importar_ign.py <ruta-al-zip> --ogr2ogr <ruta-a-ogr2ogr>` y luego `python scripts/publicar_ign.py`.
+3. Si el volumen PostGIS está vacío, disponer del ZIP IGN y de `ogr2ogr` con soporte PostgreSQL. Ejecutar `python scripts/importar_ign.py <ruta-al-zip> --ogr2ogr <ruta-a-ogr2ogr>` y luego `python scripts/publicar_ign.py` y `python scripts/estilos_ign.py`.
 4. Entrar al visor en `http://localhost:8000/administracion/visor/`, iniciar sesión con Google, recargar y activar las capas deseadas.
 
 El ZIP del IGN, `.env` y los volúmenes de Docker no forman parte del commit. Para preparar una instalación local independiente mediante estos pasos, quien la prepare necesita el ZIP y debe configurar sus credenciales. El catálogo JSON sí se versiona como inventario de la carga realizada.

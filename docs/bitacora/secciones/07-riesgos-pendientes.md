@@ -19,4 +19,5 @@ Tabla: Riesgos identificados
 - Las 47 capas del ZIP IGN están cargadas en el PostGIS local `gisdb` y publicadas por WMS/WFS. Los volúmenes locales no se distribuyen con el repositorio; para reproducir la carga local se usa el ZIP y la importación documentada en el README.
 - [PENDIENTE] Conectar Django al PostGIS del proyecto para alimentar el panel y realizar los cálculos geográficos.
 - Las consultas por punto y rectángulo y la medición de distancias están implementadas. La rama incorporada incluye pruebas de navegador con servicios simulados.
-- [PENDIENTE] Verificar esas herramientas, los interruptores y las leyendas con las capas reales del IGN.
+- Las herramientas, los interruptores y las leyendas se verificaron con las capas reales del IGN. Las 47 capas tienen simbología propia y ocho se clasifican por atributo (ADR-0014).
+- [PENDIENTE] Consultar al profesor si la capa Relevamientos debe estar en PostGIS y servida por GeoServer.

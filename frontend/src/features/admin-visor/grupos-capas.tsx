@@ -1,3 +1,4 @@
+import { useTheme } from "next-themes"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
@@ -15,6 +16,8 @@ type ControlCapas = {
 function ItemCapa({ capa, visibles, onCambiar, wmsUrl }: ControlCapas & { capa: CapaWms }) {
   const visible = visibles.has(capa.nombre)
   const id = `capa-${capa.nombre.replace(/\W/g, "-")}`
+  // El tema entra en la clave de la imagen: al cambiarlo se pide la leyenda con el nuevo color de texto.
+  const { resolvedTheme } = useTheme()
   return (
     <li className="flex flex-col gap-2 px-4 py-2.5">
       <div className="flex items-center justify-between gap-3 text-sm">
@@ -25,9 +28,10 @@ function ItemCapa({ capa, visibles, onCambiar, wmsUrl }: ControlCapas & { capa: 
       </div>
       {visible && (
         <img
+          key={resolvedTheme}
           src={urlLeyenda(wmsUrl, capa.nombre)}
           alt={`Leyenda de ${capa.titulo}`}
-          className="max-w-full self-start rounded-sm bg-background p-1"
+          className="max-w-full self-start"
         />
       )}
     </li>
