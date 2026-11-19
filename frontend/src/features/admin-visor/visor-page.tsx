@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { createPortal } from "react-dom"
 import { useTheme } from "next-themes"
 import { Layers } from "lucide-react"
 import { AdminLayout } from "@/components/admin/admin-layout"
@@ -11,16 +12,21 @@ import { useConsulta } from "./herramientas/use-consulta"
 import { useDibujo } from "./herramientas/use-dibujo"
 import { useMedicion } from "./herramientas/use-medicion"
 import { estiloDibujo, estiloMedicion, estiloResaltado } from "./mapa/estilos"
+import { useCapasActivas } from "./mapa/use-capas-activas"
 import { useEstadoMapa } from "./mapa/use-estado-mapa"
+import { useGlobo } from "./mapa/use-globo"
 import { useCapasWms, useCapaVectorial, useMapa } from "./mapa/use-mapa"
 import { leerCapas } from "./ogc"
 import type { Herramienta, TipoGeometria, VisorData } from "./types"
 import { BarraHerramientas, TECLAS } from "./ui/barra-herramientas"
 import { BarraEstado, ControlesZoom } from "./ui/controles-mapa"
+import { DetalleElemento } from "./ui/detalle-elemento"
+import { EstadoConsulta } from "./ui/estado-consulta"
+import { GloboConsulta, type ElementoConCapa } from "./ui/globo-consulta"
 import { PanelAgregar } from "./ui/panel-agregar"
-import { PanelLateral, type EstadoCapas } from "./ui/panel-lateral"
+import { PanelCapas, type EstadoCapas } from "./ui/panel-capas"
 import { PanelMedicion } from "./ui/panel-medicion"
-import { ResultadosConsulta } from "./ui/resultados-consulta"
+import { TablaAtributos } from "./ui/tabla-atributos"
 
 const SIN_CAPAS: never[] = []
 
@@ -32,38 +38,54 @@ export function VisorPage({ data }: { data: VisorData }) {
   useDjangoMessages(data.messages)
   const { geoserver } = data
   const [estado, setEstado] = useState<EstadoCapas>({ tipo: "cargando" })
-  const [visibles, setVisibles] = useState<Set<string>>(() => new Set())
-  const [opacidades, setOpacidades] = useState<Record<string, number>>({})
   const [herramienta, setHerramienta] = useState<Herramienta>("navegar")
   const [capaEditable, setCapaEditable] = useState("")
   const [tipoGeometria, setTipoGeometria] = useState<TipoGeometria>("Point")
+  const [catalogoAbierto, setCatalogoAbierto] = useState(false)
+  const [detalleId, setDetalleId] = useState<string | null>(null)
 
   const capas = estado.tipo === "listo" ? estado.capas : SIN_CAPAS
-  const encendidas = useMemo(() => capas.filter((capa) => visibles.has(capa.nombre)), [capas, visibles])
+  const activas = useCapasActivas(capas)
   const editables = useMemo(() => capas.filter((capa) => capa.editable), [capas])
+  const { reemplazar } = activas
 
   useEffect(() => {
     const control = new AbortController()
     leerCapas(geoserver.wmsUrl, data.capasEditables, control.signal)
       .then((resultado) => {
         setEstado({ tipo: "listo", capas: resultado })
-        setVisibles(new Set(resultado.filter((capa) => CAPAS_INICIALES.includes(capa.nombre)).map((capa) => capa.nombre)))
         setCapaEditable(resultado.find((capa) => capa.editable)?.nombre ?? "")
       })
       .catch(() => !control.signal.aborted && setEstado({ tipo: "error" }))
     return () => control.abort()
   }, [geoserver.wmsUrl, data.capasEditables])
 
+  useEffect(() => {
+    if (capas.length) reemplazar(CAPAS_INICIALES)
+  }, [capas, reemplazar])
+
   // Mapa, capas y herramientas: cada una vive en su hook y comparte solo el mapa.
   const { contenedor, mapa, verExtensionInicial } = useMapa(data.extension)
-  const refrescarCapa = useCapasWms(mapa, geoserver.wmsUrl, capas, visibles, opacidades)
+  const refrescarCapa = useCapasWms(mapa, geoserver.wmsUrl, capas, activas.activas, activas.ocultas, activas.opacidades)
   const fuenteResaltado = useCapaVectorial(mapa, estiloResaltado, 10_000)
   const fuenteMedicion = useCapaVectorial(mapa, estiloMedicion, 10_001)
   const fuenteDibujo = useCapaVectorial(mapa, estiloDibujo, 10_002)
   const estadoMapa = useEstadoMapa(mapa)
-  const consulta = useConsulta(mapa, herramienta, encendidas, geoserver, fuenteResaltado)
+  const consulta = useConsulta(mapa, herramienta, activas.visibles, geoserver, fuenteResaltado)
   const medicion = useMedicion(mapa, herramienta === "medir", fuenteMedicion)
   const dibujo = useDibujo(mapa, herramienta === "agregar", tipoGeometria, fuenteDibujo)
+
+  // Resultados con su capa: el globo los recorre y el detalle busca por identificador.
+  const elementos = useMemo<ElementoConCapa[]>(() => {
+    const actual = consulta.consulta
+    if (actual?.estado !== "listo") return []
+    return actual.grupos.flatMap((grupo) => grupo.elementos.map((elemento) => ({ ...elemento, capaWms: grupo.capa })))
+  }, [consulta.consulta])
+  const resultado = consulta.consulta?.estado === "listo" ? consulta.consulta : null
+  const conGlobo = resultado?.tipo === "punto" && elementos.length > 0
+  const conTabla = resultado?.tipo === "rectangulo" && resultado.grupos.length > 0
+  const indiceGlobo = Math.max(0, elementos.findIndex((elemento) => elemento.id === consulta.seleccion))
+  const globo = useGlobo(mapa, conGlobo ? resultado.coordenada : undefined)
 
   // Los estilos propios leen los tokens del tema: al cambiar de tema se vuelve a dibujar.
   const { resolvedTheme } = useTheme()
@@ -72,7 +94,8 @@ export function VisorPage({ data }: { data: VisorData }) {
   const { limpiar: limpiarConsulta } = consulta
   const cambiarHerramienta = useCallback(
     (siguiente: Herramienta) => {
-      if (siguiente === "medir" || siguiente === "agregar") limpiarConsulta()
+      // Los resultados quedan al volver a Navegar; con otra herramienta se limpian.
+      if (siguiente !== "navegar") limpiarConsulta()
       setHerramienta(siguiente)
     },
     [limpiarConsulta],
@@ -82,6 +105,10 @@ export function VisorPage({ data }: { data: VisorData }) {
     const alTeclear = (evento: KeyboardEvent) => {
       if (evento.ctrlKey || evento.metaKey || evento.altKey || esCampoDeTexto(evento.target)) return
       if (evento.key === "Escape") return cambiarHerramienta("navegar")
+      if (evento.key.toLowerCase() === "c") {
+        evento.preventDefault()
+        return setCatalogoAbierto(true)
+      }
       const elegida = TECLAS[evento.key.toLowerCase()]
       if (elegida) cambiarHerramienta(elegida)
     }
@@ -89,33 +116,25 @@ export function VisorPage({ data }: { data: VisorData }) {
     return () => window.removeEventListener("keydown", alTeclear)
   }, [cambiarHerramienta])
 
-  const cambiarVisible = (nombre: string, visible: boolean) =>
-    setVisibles((actual) => {
-      const siguiente = new Set(actual)
-      if (visible) siguiente.add(nombre)
-      else siguiente.delete(nombre)
-      return siguiente
-    })
-
   const alGuardar = (capa: string) => {
     refrescarCapa(capa)
-    cambiarVisible(capa, true)
+    activas.agregar(capa)
+    if (activas.ocultas.has(capa)) activas.alternarVisible(capa)
     dibujo.descartar()
   }
 
-  const panelLateral = (
-    <PanelLateral
+  const panelCapas = (
+    <PanelCapas
       estado={estado}
-      visibles={visibles}
-      opacidades={opacidades}
-      onVisible={cambiarVisible}
-      onOpacidad={(nombre, opacidad) => setOpacidades((actual) => ({ ...actual, [nombre]: opacidad }))}
-      onApagarTodas={() => setVisibles(new Set())}
+      activas={activas}
+      catalogoAbierto={catalogoAbierto}
+      onCatalogo={setCatalogoAbierto}
       wmsUrl={geoserver.wmsUrl}
       consolaUrl={`${geoserver.url}/web/`}
     />
   )
 
+  const consultando = herramienta === "punto" || herramienta === "rectangulo"
   const panelHerramienta =
     herramienta === "medir" ? (
       <PanelMedicion {...medicion} onEliminar={medicion.eliminar} onLimpiar={medicion.limpiar} />
@@ -133,14 +152,8 @@ export function VisorPage({ data }: { data: VisorData }) {
         transaccionUrl={data.transaccionUrl}
         csrf={data.csrf}
       />
-    ) : herramienta !== "navegar" || consulta.consulta ? (
-      <ResultadosConsulta
-        consulta={consulta.consulta}
-        tipo={herramienta === "rectangulo" ? "rectangulo" : "punto"}
-        seleccion={consulta.seleccion}
-        onSeleccionar={consulta.seleccionar}
-        onLimpiar={consulta.limpiar}
-      />
+    ) : consultando && !conGlobo && !conTabla ? (
+      <EstadoConsulta consulta={consulta.consulta} tipo={herramienta} capasConsultadas={activas.visibles.length} />
     ) : null
 
   return (
@@ -160,41 +173,65 @@ export function VisorPage({ data }: { data: VisorData }) {
       csrf={data.csrf}
     >
       <div className="flex min-h-0 flex-1">
-        <aside aria-label="Capas y leyenda" className="hidden w-80 shrink-0 flex-col border-r bg-background md:flex">
-          {panelLateral}
+        <aside aria-label="Capas" className="hidden w-80 shrink-0 flex-col border-r bg-background md:flex">
+          {panelCapas}
         </aside>
-        <div className="relative min-h-[60dvh] flex-1 overflow-hidden md:min-h-0">
-          <div
-            ref={contenedor}
-            role="region"
-            aria-label="Mapa"
-            className={cn("absolute inset-0 bg-muted/40", herramienta !== "navegar" && "cursor-crosshair")}
-          />
-          <div className="absolute top-3 left-3 flex flex-col gap-2">
-            <Sheet>
-              <SheetTrigger render={<Button variant="outline" size="icon" className="shadow-lg md:hidden" aria-label="Capas" />}>
-                <Layers />
-              </SheetTrigger>
-              <SheetContent side="left" className="flex w-80 flex-col gap-0 p-0">
-                <SheetHeader>
-                  <SheetTitle>Capas y leyenda</SheetTitle>
-                </SheetHeader>
-                {panelLateral}
-              </SheetContent>
-            </Sheet>
-            <BarraHerramientas herramienta={herramienta} onCambiar={cambiarHerramienta} />
-            <ControlesZoom mapa={mapa} onInicio={verExtensionInicial} />
-          </div>
-          {panelHerramienta && (
-            <div className="pointer-events-none absolute inset-x-3 bottom-14 flex max-h-[45%] flex-col justify-end md:top-3 md:right-3 md:bottom-16 md:left-auto md:max-h-none md:justify-start">
-              {panelHerramienta}
+        <div className="flex min-h-[60dvh] min-w-0 flex-1 flex-col md:min-h-0">
+          <div className="relative min-h-0 flex-1 overflow-hidden">
+            <div
+              ref={contenedor}
+              role="region"
+              aria-label="Mapa"
+              className={cn("absolute inset-0 bg-muted/40", herramienta !== "navegar" && "cursor-crosshair")}
+            />
+            <div className="absolute top-3 left-3 flex flex-col gap-2">
+              <Sheet>
+                <SheetTrigger render={<Button variant="outline" size="icon" className="shadow-lg md:hidden" aria-label="Capas" />}>
+                  <Layers />
+                </SheetTrigger>
+                <SheetContent side="left" className="flex w-80 flex-col gap-0 p-0">
+                  <SheetHeader>
+                    <SheetTitle>Capas</SheetTitle>
+                  </SheetHeader>
+                  {panelCapas}
+                </SheetContent>
+              </Sheet>
+              <BarraHerramientas herramienta={herramienta} onCambiar={cambiarHerramienta} />
+              <ControlesZoom mapa={mapa} onInicio={verExtensionInicial} />
             </div>
-          )}
-          <div className="absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)]">
-            <BarraEstado estado={estadoMapa} />
+            {panelHerramienta && (
+              <div className="pointer-events-none absolute inset-x-3 bottom-14 flex max-h-[45%] flex-col justify-end md:top-3 md:right-3 md:bottom-16 md:left-auto md:max-h-none md:justify-start">
+                {panelHerramienta}
+              </div>
+            )}
+            <div className="absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)]">
+              <BarraEstado estado={estadoMapa} />
+            </div>
           </div>
+          {conTabla && (
+            <TablaAtributos
+              key={resultado.grupos.map((grupo) => grupo.capa.nombre).join()}
+              grupos={resultado.grupos}
+              seleccion={consulta.seleccion}
+              onSeleccionar={consulta.seleccionar}
+              onDetalle={setDetalleId}
+              onCerrar={consulta.limpiar}
+            />
+          )}
         </div>
       </div>
+      {conGlobo &&
+        createPortal(
+          <GloboConsulta
+            elementos={elementos}
+            actual={indiceGlobo}
+            onCambiar={(indice) => consulta.seleccionar(elementos[indice].id)}
+            onVerTodo={() => setDetalleId(elementos[indiceGlobo].id)}
+            onCerrar={consulta.limpiar}
+          />,
+          globo,
+        )}
+      <DetalleElemento elemento={elementos.find((elemento) => elemento.id === detalleId) ?? null} onCerrar={() => setDetalleId(null)} />
     </AdminLayout>
   )
 }

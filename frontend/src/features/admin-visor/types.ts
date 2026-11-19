@@ -1,4 +1,5 @@
 import type Feature from "ol/Feature"
+import type { Coordinate } from "ol/coordinate"
 import type { AdminPageData } from "@/components/admin/types"
 
 export type GeoServerConfig = { url: string; workspace: string; wmsUrl: string; wfsUrl: string }
@@ -22,7 +23,7 @@ export type GrupoResultados = { capa: CapaWms; elementos: ElementoConsultado[]; 
 
 export type Consulta =
   | { estado: "cargando"; tipo: "punto" | "rectangulo" }
-  | { estado: "listo"; tipo: "punto" | "rectangulo"; grupos: GrupoResultados[] }
+  | { estado: "listo"; tipo: "punto" | "rectangulo"; grupos: GrupoResultados[]; coordenada?: Coordinate }
   | { estado: "error"; tipo: "punto" | "rectangulo"; mensaje: string }
 
 export type TipoCampo = "texto" | "entero" | "numero" | "fecha" | "booleano"

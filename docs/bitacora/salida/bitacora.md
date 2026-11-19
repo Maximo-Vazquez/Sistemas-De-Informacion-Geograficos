@@ -17,13 +17,14 @@
 | **Proyecto** | Visor SIG Chaco |
 | **Lugar de realización** | Universidad Tecnológica Nacional – Facultad Regional Resistencia<br>French 414, Resistencia, Chaco, Argentina. |
 | **Nombre del documento** | Bitácora técnica – Visor SIG Chaco |
-| **Versión/Edición** | 0.6.0 |
-| **Fecha de versión** | 29/10/2026 |
+| **Versión/Edición** | 0.7.0 |
+| **Fecha de versión** | 30/10/2026 |
 
 ## Control de versiones
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| 0.7.0 | 30/10/2026 | Visor con capas en el mapa, catálogo de capas y temas rápidos; Globo, panel de detalle y tabla de atributos para las consultas |
 | 0.6.0 | 29/10/2026 | Visor con consulta por punto y área, medición, carga de elementos y leyenda con clases (ADR-0011); Pruebas de navegador del visor |
 | 0.5.0 | 29/10/2026 | PostGIS en Docker con las 47 capas del SIG IGN 250 (ADR-0010); Capas publicadas en GeoServer |
 | 0.4.0 | 29/10/2026 | GeoServer en Docker como servidor de mapas (ADR-0008); OpenLayers y primera versión del visor (ADR-0009) |
@@ -111,6 +112,7 @@ Tabla: Tecnologías en uso
 | Carga de capas | GDAL ogr2ogr (Docker) | 3.11.3 | Shapefiles a PostGIS (`scripts/cargar_capas_ign.py`) |
 | Servidor de mapas | GeoServer (Docker) | 2.27.2 | Servicios WMS y WFS de las capas (ADR-0008) |
 | Biblioteca de mapas | OpenLayers | 10.6.1 | Visor web de Administración (ADR-0009) |
+| Listas ordenables | dnd-kit | 6.3.1 | Orden de las capas en el visor |
 | Estilos de capas | SLD 1.0 (`geoserver/estilos/`) | — | Leyenda con clases (ADR-0011) |
 
 ## 3.3 Componentes previstos
@@ -652,6 +654,39 @@ Rehacer el visor para cumplir todas las funciones de la consigna a.3, con cada h
 
 - Estilos propios para las otras 41 capas del IGN.
 - Las etiquetas de GeoServer tienen halo blanco, que en tema oscuro resalta mucho.
+
+## 6.8 30/10/2026 — Visor - capas en el mapa, catálogo y detalle de elementos
+
+*Vazquez Maximo Ezequiel*
+
+### Objetivo
+
+Simplificar la selección de capas (47 interruptores juntos) y mejorar cómo se ve el detalle de los elementos consultados.
+
+### Trabajo realizado
+
+- Panel de capas reorganizado: muestra solo las **capas en el mapa**, de arriba hacia abajo, con su leyenda, opacidad, ojo para ocultar y botón para quitar. Se reordenan arrastrando (dnd-kit 6.3.1, también con teclado).
+- **Catálogo** para agregar capas: diálogo con buscador (`Command` de shadcn), agrupado por tema y con marca de las que ya están en el mapa. Se abre con "Agregar" o con la tecla C.
+- **Temas rápidos**: Obra RN 11, Hidrografía, Transporte y Límites cambian las capas del mapa con un clic.
+- Nombres legibles para las 47 capas y los atributos del IGN (`catalogo.ts`): por ejemplo `canthab` se muestra como "Habitantes" con separador de miles, y los campos técnicos se ocultan.
+- Consulta por punto: **globo** junto al clic con el nombre, la capa y los datos clave; flechas para recorrer los elementos encontrados y "Ver todos los datos" abre el **panel de detalle** (`DetailSheet`, el mismo de Administración) con atributos y ubicación.
+- Consulta por área: **tabla de atributos** bajo el mapa, con una pestaña por capa, orden por columna, exportación a CSV y la fila elegida resaltada en el mapa. El nombre abre el detalle.
+- Al elegir un resultado, el mapa solo se desplaza si el elemento quedó fuera de la vista; ya no acerca de más.
+- `DataTable` compartido: nueva opción `onRowClick` para hacer clic en la fila entera.
+
+### Verificación
+
+- Pruebas de navegador del visor (6): catálogo y leyenda, temas rápidos, globo y detalle, tabla de atributos y detalle, medición y carga de elementos. Suite completa: 15 en verde.
+- Tests de Django (19), `pnpm typecheck`, `pnpm build` y `check:colores` en verde.
+- Capturas revisadas en escritorio, tema claro.
+
+### Problemas y soluciones
+
+- El globo de una consulta por punto quedaba abierto al cambiar de herramienta: los resultados se limpian al elegir otra herramienta y se conservan al volver a Navegar.
+
+### Pendientes
+
+- Revisar el panel de capas en el celular.
 
 # 7 Riesgos y pendientes
 

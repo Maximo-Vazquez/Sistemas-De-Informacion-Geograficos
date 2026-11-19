@@ -2,6 +2,8 @@ import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import Feature from "ol/Feature"
 import type OlMap from "ol/Map"
 import type MapBrowserEvent from "ol/MapBrowserEvent"
+import type { Coordinate } from "ol/coordinate"
+import { containsExtent } from "ol/extent"
 import { Point } from "ol/geom"
 import { DragBox, DragPan } from "ol/interaction"
 import type VectorSource from "ol/source/Vector"
@@ -23,7 +25,7 @@ export function useConsulta(
   const [seleccion, setSeleccion] = useState<string | null>(null)
   const control = useRef<AbortController | null>(null)
 
-  const ejecutar = useEffectEvent(async (tipo: "punto" | "rectangulo", buscar: Buscar, marco: Feature) => {
+  const ejecutar = useEffectEvent(async (tipo: "punto" | "rectangulo", buscar: Buscar, marco: Feature, coordenada?: Coordinate) => {
     control.current?.abort()
     const actual = new AbortController()
     control.current = actual
@@ -40,7 +42,10 @@ export function useConsulta(
       const grupos = await buscar(actual.signal)
       if (actual.signal.aborted) return
       fuente.addFeatures(grupos.flatMap((grupo) => grupo.elementos.map((elemento) => elemento.feature)))
-      setConsulta({ estado: "listo", tipo, grupos })
+      setConsulta({ estado: "listo", tipo, grupos, coordenada })
+      // En la consulta por punto, el globo arranca mostrando el primer elemento.
+      const primero = grupos[0]?.elementos[0]?.id
+      if (tipo === "punto" && primero) marcarSeleccion(primero)
     } catch (error) {
       if (actual.signal.aborted) return
       setConsulta({ estado: "error", tipo, mensaje: error instanceof Error ? error.message : "No se pudo consultar." })
@@ -52,7 +57,7 @@ export function useConsulta(
     if (!resolucion) return
     const buscar: Buscar = (signal) =>
       consultarPunto(geoserver.wmsUrl, capasEncendidas, evento.coordinate, resolucion, signal)
-    ejecutar("punto", buscar, new Feature(new Point(evento.coordinate)))
+    ejecutar("punto", buscar, new Feature(new Point(evento.coordinate)), evento.coordinate)
   })
 
   const porRectangulo = useEffectEvent((caja: DragBox) => {
@@ -83,17 +88,26 @@ export function useConsulta(
     }
   }, [mapa, herramienta])
 
-  const seleccionar = useCallback(
+  const marcarSeleccion = useCallback(
     (id: string | null) => {
       setSeleccion(id)
       for (const feature of fuente.getFeatures()) feature.set("seleccionado", feature.getId() === id)
-      const elegido = id ? fuente.getFeatureById(id) : null
-      const extension = elegido?.getGeometry()?.getExtent()
-      if (mapa && extension) {
-        mapa.getView().fit(extension, { padding: [80, 80, 80, 80], maxZoom: 13, duration: 400 })
-      }
     },
-    [fuente, mapa],
+    [fuente],
+  )
+
+  // Marca el elemento y, si quedó fuera de la vista, lo trae sin acercar más de lo que está.
+  const seleccionar = useCallback(
+    (id: string | null) => {
+      marcarSeleccion(id)
+      const extension = id ? fuente.getFeatureById(id)?.getGeometry()?.getExtent() : undefined
+      const vista = mapa?.getView()
+      if (!mapa || !vista || !extension) return
+      const visible = vista.calculateExtent(mapa.getSize())
+      if (containsExtent(visible, extension)) return
+      vista.fit(extension, { padding: [120, 120, 120, 120], maxZoom: vista.getZoom(), duration: 400 })
+    },
+    [fuente, mapa, marcarSeleccion],
   )
 
   const limpiar = useCallback(() => {

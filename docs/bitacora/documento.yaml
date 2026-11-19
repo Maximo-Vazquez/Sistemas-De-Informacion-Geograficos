@@ -30,7 +30,7 @@ encabezado:
   - Bitácora técnica
 
 # SemVer: major al cerrar una entrega, minor por contenido nuevo, patch por correcciones.
-version: 0.6.0
+version: 0.7.0
 versiones:
   - version: 0.1.0
     fecha: 2026-10-22
@@ -66,3 +66,8 @@ versiones:
     cambios:
       - Visor con consulta por punto y área, medición, carga de elementos y leyenda con clases (ADR-0011)
       - Pruebas de navegador del visor
+  - version: 0.7.0
+    fecha: 2026-10-30
+    cambios:
+      - Visor con capas en el mapa, catálogo de capas y temas rápidos
+      - Globo, panel de detalle y tabla de atributos para las consultas

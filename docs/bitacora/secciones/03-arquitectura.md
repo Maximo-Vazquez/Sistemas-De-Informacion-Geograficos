@@ -31,6 +31,7 @@ Tabla: Tecnologías en uso
 | Carga de capas | GDAL ogr2ogr (Docker) | 3.11.3 | Shapefiles a PostGIS (`scripts/cargar_capas_ign.py`) |
 | Servidor de mapas | GeoServer (Docker) | 2.27.2 | Servicios WMS y WFS de las capas (ADR-0008) |
 | Biblioteca de mapas | OpenLayers | 10.6.1 | Visor web de Administración (ADR-0009) |
+| Listas ordenables | dnd-kit | 6.3.1 | Orden de las capas en el visor |
 | Estilos de capas | SLD 1.0 (`geoserver/estilos/`) | — | Leyenda con clases (ADR-0011) |
 
 ## Componentes previstos

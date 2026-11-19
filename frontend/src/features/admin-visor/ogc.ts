@@ -6,7 +6,7 @@ import type { Geometry } from "ol/geom"
 import ImageWMS from "ol/source/ImageWMS"
 import type { Coordinate } from "ol/coordinate"
 import type { Extent } from "ol/extent"
-import { grupoDeCapa, ORDEN_GRUPOS } from "./catalogo"
+import { grupoDeCapa, ORDEN_GRUPOS, tituloDeCapa } from "./catalogo"
 import type { CampoCapa, CapaWms, EsquemaCapa, GrupoResultados, TipoCampo } from "./types"
 
 // Servicios OGC de GeoServer: WMS (capas, leyenda, consulta por punto) y WFS (consulta por
@@ -31,7 +31,7 @@ export async function leerCapas(wmsUrl: string, editables: string[], signal?: Ab
     .map((capa) => {
       const editable = editables.includes(capa.nombre)
       const grupo = grupoDeCapa(capa.nombre, editable)
-      return { ...capa, editable, grupo, orden: ORDEN_GRUPOS.indexOf(grupo) * 100 }
+      return { ...capa, titulo: tituloDeCapa(capa.nombre, capa.titulo), editable, grupo, orden: ORDEN_GRUPOS.indexOf(grupo) * 100 }
     })
     .sort((a, b) => a.orden - b.orden || a.titulo.localeCompare(b.titulo, "es"))
 }

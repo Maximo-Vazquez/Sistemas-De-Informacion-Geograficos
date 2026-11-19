@@ -38,12 +38,13 @@ export function useMapa(extension: [number, number, number, number]) {
   return { contenedor, mapa, verExtensionInicial }
 }
 
-// Una capa WMS por cada capa de GeoServer; visibilidad y opacidad vienen del panel de capas.
+// Una capa WMS por cada capa de GeoServer; orden, visibilidad y opacidad vienen del panel de capas.
 export function useCapasWms(
   mapa: OlMap | null,
   wmsUrl: string,
   capas: CapaWms[],
-  visibles: Set<string>,
+  activas: string[],
+  ocultas: Set<string>,
   opacidades: Record<string, number>,
 ) {
   const registro = useRef(new Map<string, ImageLayer<ImageWMS>>())
@@ -68,10 +69,12 @@ export function useCapasWms(
 
   useEffect(() => {
     for (const [nombre, layer] of registro.current) {
-      layer.setVisible(visibles.has(nombre))
+      const lugar = activas.indexOf(nombre)
+      layer.setVisible(lugar >= 0 && !ocultas.has(nombre))
+      layer.setZIndex(1000 - lugar)
       layer.setOpacity(opacidades[nombre] ?? 1)
     }
-  }, [mapa, capas, visibles, opacidades])
+  }, [mapa, capas, activas, ocultas, opacidades])
 
   // Vuelve a pedir la imagen (por ejemplo, después de insertar un elemento).
   return useCallback((nombre: string) => {

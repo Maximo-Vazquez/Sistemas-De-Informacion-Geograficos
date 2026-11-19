@@ -29,11 +29,14 @@ export function DataTable<T>({
   toolbar,
   pagination,
   renderCard,
+  onRowClick,
 }: {
   table: TableInstance<T>
   toolbar?: ReactNode
   pagination: ReactNode
   renderCard?: (row: Row<T>) => ReactNode
+  // Clic en cualquier parte de la fila (por ejemplo, resaltar el elemento en un mapa).
+  onRowClick?: (row: Row<T>) => void
 }) {
   const rows = table.getRowModel().rows
   // Se monta una sola vista para no duplicar contenido ni controles accesibles.
@@ -60,7 +63,12 @@ export function DataTable<T>({
             <TableBody>
               {rows.length ? (
                 rows.map((row) => (
-                  <TableRow key={row.id} data-state={row.getIsSelected() ? "selected" : undefined}>
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() ? "selected" : undefined}
+                    className={onRowClick ? "cursor-pointer" : undefined}
+                    onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}

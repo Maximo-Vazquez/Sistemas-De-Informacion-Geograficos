@@ -25,16 +25,27 @@ test.describe("Visor", () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto("/administracion/visor/")
-    await expect(page.getByRole("switch", { name: "Provincias" })).toBeChecked()
+    await expect(page.getByRole("button", { name: "Ocultar Provincias" })).toBeVisible()
   })
 
-  test("lista las capas por tema y muestra la leyenda de las encendidas", async ({ page }) => {
-    await expect(page.getByRole("region", { name: "Hidrografía" })).toBeVisible()
-    await page.getByRole("textbox", { name: "Buscar capa" }).fill("curso")
-    await page.getByRole("switch", { name: "Curso de Agua Hid" }).click()
-    await page.getByRole("tab", { name: "Leyenda" }).click()
-    await expect(page.getByRole("img", { name: "Simbología de Curso de Agua Hid" })).toBeVisible()
-    await expect(page.getByRole("img", { name: "Simbología de Red Vial" })).toBeVisible()
+  test("suma capas desde el catálogo, con su leyenda, y las quita", async ({ page }) => {
+    const lista = page.getByRole("list", { name: /Capas en el mapa/ })
+    await page.getByRole("button", { name: "Agregar", exact: true }).click()
+    const catalogo = page.getByRole("dialog", { name: "Agregar capas" })
+    await catalogo.getByRole("combobox").fill("cursos")
+    await catalogo.getByRole("option", { name: /Cursos de agua/ }).click()
+    await page.keyboard.press("Escape")
+    await expect(lista.getByRole("img", { name: "Simbología de Cursos de agua" })).toBeVisible()
+    await page.getByRole("button", { name: "Ocultar Cursos de agua" }).click()
+    await expect(page.getByRole("button", { name: "Mostrar Cursos de agua" })).toBeVisible()
+    await page.getByRole("button", { name: "Quitar Cursos de agua del mapa" }).click()
+    await expect(lista.getByText("Cursos de agua")).toHaveCount(0)
+  })
+
+  test("los temas rápidos cambian las capas del mapa", async ({ page }) => {
+    await page.getByRole("button", { name: "Hidrografía" }).click()
+    await expect(page.getByRole("button", { name: "Ocultar Lagos, lagunas y bañados" })).toBeVisible()
+    await expect(page.getByRole("button", { name: "Ocultar Red vial" })).toHaveCount(0)
   })
 
   test("la consulta por punto muestra los atributos del elemento", async ({ page }) => {
@@ -42,10 +53,10 @@ test.describe("Visor", () => {
     const mapa = page.getByRole("region", { name: "Mapa" })
     const caja = (await mapa.boundingBox())!
     await mapa.click({ position: { x: caja.width * 0.55, y: caja.height * 0.5 } })
-    const panel = page.getByRole("region", { name: "Consulta por punto" })
-    await expect(panel.getByRole("region", { name: "Provincias" })).toBeVisible()
-    await panel.getByRole("button", { name: "Chaco" }).click()
-    await expect(panel.getByText("provincia", { exact: true })).toBeVisible()
+    const globo = page.getByRole("dialog", { name: /^Detalle de/ })
+    await expect(globo).toBeVisible()
+    await globo.getByRole("button", { name: "Ver todos los datos" }).click()
+    await expect(page.getByRole("heading", { name: "Atributos" })).toBeVisible()
   })
 
   test("la consulta por área lista elementos de varias capas", async ({ page }) => {
@@ -56,9 +67,11 @@ test.describe("Visor", () => {
     await page.mouse.down()
     await page.mouse.move(caja.x + caja.width * 0.7, caja.y + caja.height * 0.65, { steps: 8 })
     await page.mouse.up()
-    const panel = page.getByRole("region", { name: "Consulta por área" })
-    await expect(panel.getByRole("region", { name: "Localidades" })).toBeVisible()
-    await expect(panel.getByText(/elementos en \d+ capas/)).toBeVisible()
+    const tabla = page.getByRole("region", { name: "Tabla de atributos" })
+    await expect(tabla.getByRole("tab", { name: /Localidades/ })).toBeVisible()
+    await tabla.getByRole("tab", { name: /Localidades/ }).click()
+    await tabla.getByRole("row").nth(1).getByRole("button").first().click()
+    await expect(page.getByRole("heading", { name: "Ubicación" })).toBeVisible()
   })
 
   test("mide una distancia de varios tramos", async ({ page }) => {
@@ -88,7 +101,7 @@ test.describe("Visor", () => {
       await panel.getByRole("textbox", { name: "Categoría" }).fill("Obra vial")
       await panel.getByRole("button", { name: "Guardar elemento" }).click()
       await expect(page.getByText(/Elemento guardado en Elementos relevados/)).toBeVisible()
-      await expect(page.getByRole("switch", { name: "Elementos relevados" })).toBeChecked()
+      await expect(page.getByRole("button", { name: "Ocultar Elementos relevados" })).toBeVisible()
     } finally {
       borrarElementosDePrueba()
     }
